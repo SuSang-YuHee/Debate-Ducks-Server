@@ -1,4 +1,3 @@
-import { channel } from "diagnostics_channel";
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -10,53 +9,36 @@ import {
   MessageBody,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { onlineMap } from "./onlineMap";
 
-@WebSocketGateway({ namespace: /\/ws-.+/, cors: { origin: "*" } })
-
-// 필수 구현요소 검사용으로 implements
+@WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  // express socket.io의 io 역할
   @WebSocketServer() public server: Server;
 
-  @SubscribeMessage("test")
-  handleTest(@MessageBody() data: string) {
-    console.log("test", data);
-  }
-
-  @SubscribeMessage("login")
-  handleLogin(
-    @MessageBody() data: { id: number; channels: number[] },
+  @SubscribeMessage("join")
+  handleJoin(
     @ConnectedSocket() socket: Socket,
+    @MessageBody() debateId: string,
   ) {
-    const newNamespace = socket.nsp;
-    console.log("login", newNamespace);
-    onlineMap[socket.nsp.name][socket.id] = data.id;
-    newNamespace.emit("onlineList", Object.values(onlineMap[socket.nsp.name]));
-    data.channels.forEach((channel) => {
-      console.log("join", socket.nsp.name, channel);
-      socket.join(`${socket.nsp.name}-${channel}`);
-    });
+    const roomSize = this.server.sockets.adapter.rooms.get(debateId)?.size || 0;
+    if (roomSize < 2) {
+      socket.join(debateId);
+      socket.to(debateId).emit("guestJoin");
+    } else {
+      socket.emit("overcapacity");
+    }
   }
 
-  afterInit(server: Server): void {
-    console.log("websocket server init", server);
+  afterInit(): void {
+    console.log("WebSocket Server Init");
   }
 
   handleConnection(@ConnectedSocket() socket: Socket): void {
-    console.log("connected", socket.nsp.name);
-    if (!onlineMap[socket.nsp.name]) {
-      onlineMap[socket.nsp.name] = {};
-    }
-    socket.emit("hello", socket.nsp.name);
+    console.log("connected", socket.id);
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket): void {
-    console.log("disconnected", socket.nsp.name);
-    const newNamespace = socket.nsp;
-    delete onlineMap[socket.nsp.name][socket.id];
-    newNamespace.emit("onlineList", Object.values(onlineMap[socket.nsp.name]));
+    console.log("disconnected", socket.id);
   }
 }
