@@ -30,7 +30,6 @@ export class EventsGateway
   }
 
   // Room & WebRTC
-
   @SubscribeMessage("join")
   handleJoin(
     @ConnectedSocket() socket: Socket,
@@ -61,5 +60,22 @@ export class EventsGateway
     @MessageBody() data: { debateId: string; signal: Peer.SignalData },
   ) {
     socket.to(data.debateId).emit("answer", data.signal);
+  }
+
+  // On & Off
+  @SubscribeMessage("peerVideo")
+  handlePeerVideo(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { debateId: string; isVideoOn: boolean },
+  ) {
+    socket.to(data.debateId).emit("peerVideo", data.isVideoOn);
+  }
+
+  @SubscribeMessage("peerScreen")
+  handlePeerScreen(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { debateId: string; isScreenOn: boolean },
+  ) {
+    socket.to(data.debateId).emit("peerScreen", data.isScreenOn);
   }
 }
