@@ -23,7 +23,7 @@ export class EventsGateway
     console.log("WebSocket Server Init");
   }
 
-  // Connect and Disconnect
+  //* Room and WebRTC 연결 및 연결 해제
   handleConnection(@ConnectedSocket() socket: Socket) {
     console.log("connection", socket.id);
   }
@@ -32,7 +32,7 @@ export class EventsGateway
     console.log("disconnection", socket.id);
     const roomId = roomIds[socket.id];
     delete roomIds[socket.id];
-    socket.to(roomId).emit("peerDisconnect", socket.id);
+    socket.to(roomId).emit("peerDisconnect");
   }
 
   @SubscribeMessage("join")
@@ -56,7 +56,6 @@ export class EventsGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { debateId: string; signal: Peer.SignalData },
   ) {
-    console.log("offer"); //!
     socket.to(data.debateId).emit("offer", data.signal);
   }
 
@@ -65,11 +64,10 @@ export class EventsGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { debateId: string; signal: Peer.SignalData },
   ) {
-    console.log("answer"); //!
     socket.to(data.debateId).emit("answer", data.signal);
   }
 
-  // On and Off
+  //* 끄기/켜기
   @SubscribeMessage("peerVideo")
   handlePeerVideo(
     @ConnectedSocket() socket: Socket,
