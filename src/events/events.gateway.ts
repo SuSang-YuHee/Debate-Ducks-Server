@@ -11,6 +11,8 @@ import {
 import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
 
+const roomIds = {};
+
 @WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -21,15 +23,18 @@ export class EventsGateway
     console.log("WebSocket Server Init");
   }
 
+  // Connect and Disconnect
   handleConnection(@ConnectedSocket() socket: Socket) {
-    console.log("connected", socket.id);
+    console.log("connection", socket.id);
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log("disconnected", socket.id);
+    console.log("disconnection", socket.id);
+    const roomId = roomIds[socket.id];
+    delete roomIds[socket.id];
+    socket.to(roomId).emit("peerDisconnect", socket.id);
   }
 
-  // Room & WebRTC
   @SubscribeMessage("join")
   handleJoin(
     @ConnectedSocket() socket: Socket,
@@ -38,11 +43,11 @@ export class EventsGateway
     const roomSize =
       this.server.sockets.adapter.rooms.get(data.debateId)?.size || 0;
     if (roomSize < 2) {
+      roomIds[socket.id] = data.debateId;
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
     } else {
       socket.emit("overcapacity");
-      socket.disconnect(); //*
     }
   }
 
@@ -51,6 +56,7 @@ export class EventsGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { debateId: string; signal: Peer.SignalData },
   ) {
+    console.log("offer"); //!
     socket.to(data.debateId).emit("offer", data.signal);
   }
 
@@ -59,10 +65,11 @@ export class EventsGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { debateId: string; signal: Peer.SignalData },
   ) {
+    console.log("answer"); //!
     socket.to(data.debateId).emit("answer", data.signal);
   }
 
-  // On & Off
+  // On and Off
   @SubscribeMessage("peerVideo")
   handlePeerVideo(
     @ConnectedSocket() socket: Socket,
