@@ -12,6 +12,8 @@ import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
 
 const roomIds = {};
+const roomDebates = {};
+//! roomId: { isClear: false, prosReady, consReady: count: 0,  }
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway
@@ -46,6 +48,10 @@ export class EventsGateway
       roomIds[socket.id] = data.debateId;
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
+
+      if (roomDebates[data.debateId]?.isDebate) {
+        socket.emit("debate");
+      }
     } else {
       socket.emit("overcapacity");
     }
@@ -67,7 +73,7 @@ export class EventsGateway
     socket.to(data.debateId).emit("answer", data.signal);
   }
 
-  //* 끄기/켜기
+  //* 정보 송수신
   @SubscribeMessage("peerVideo")
   handlePeerVideo(
     @ConnectedSocket() socket: Socket,
@@ -82,5 +88,27 @@ export class EventsGateway
     @MessageBody() data: { debateId: string; isScreenOn: boolean },
   ) {
     socket.to(data.debateId).emit("peerScreen", data.isScreenOn);
+  }
+
+  //* 토론
+  @SubscribeMessage("ready")
+  handleReady(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    data: { debateId: string; isReady: boolean; isPros: boolean },
+  ) {
+    const isReady = data.isPros ? "isProsReady" : "isConsReady";
+    roomDebates[data.debateId] = roomDebates[data.debateId] || {};
+    roomDebates[data.debateId][isReady] = data.isReady;
+    if (
+      roomDebates[data.debateId].isProsReady &&
+      roomDebates[data.debateId].isConsReady &&
+      !roomDebates[data.debateId].isDebate
+    ) {
+      //! Maybe 여기에 토론 함수 작성
+      roomDebates[data.debateId].isDebate = true;
+      socket.emit("debate");
+      socket.to(data.debateId).emit("debate");
+    }
   }
 }
