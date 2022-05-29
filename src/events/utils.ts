@@ -44,9 +44,11 @@ export const debate = (
     turn: roomDebates[debateId].turn,
     timer: roomDebates[debateId].timer,
   };
+
   socket.emit("debateProgress", data);
   socket.to(debateId).emit("debateProgress", data);
   roomDebates[debateId].timer -= 1;
+
   if (roomDebates[debateId].timer < 1) {
     roomDebates[debateId].turn += 1;
     roomDebates[debateId].timer = DEBATE_DEFAULT[roomDebates[debateId].turn][1];
