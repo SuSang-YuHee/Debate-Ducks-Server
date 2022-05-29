@@ -22,12 +22,12 @@ export class EventsGateway
     console.log("WebSocket Server Init");
   }
 
-  //* Room and WebRTC 연결 및 연결 해제
+  //*- 연결, 입장 및 연결 해제
   handleConnection(@ConnectedSocket() socket: Socket) {
     console.log("connection", socket.id);
   }
 
-  //  * 연결 해제
+  // * 연결 해제
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log("disconnection", socket.id);
 
@@ -50,7 +50,7 @@ export class EventsGateway
     socket.to(roomId).emit("peerDisconnect");
   }
 
-  //  * 입장
+  // * 입장
   @SubscribeMessage("join")
   handleJoin(
     @ConnectedSocket() socket: Socket,
@@ -59,13 +59,14 @@ export class EventsGateway
     const roomSize =
       this.server.sockets.adapter.rooms.get(data.debateId)?.size || 0;
     if (roomSize < 2) {
+      console.log("join", data.debateId, socket.id);
+
       roomIds[socket.id] = data.debateId;
       roomDebates[data.debateId] = roomDebates[data.debateId] || {};
       roomDebates[data.debateId].size = roomDebates[data.debateId].size
         ? roomDebates[data.debateId].size + 1
         : 1;
 
-      console.log("join", data.debateId, roomDebates[data.debateId]);
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
 
@@ -88,6 +89,7 @@ export class EventsGateway
     }
   }
 
+  // * WebRTC 연결
   @SubscribeMessage("offer")
   handleOffer(
     @ConnectedSocket() socket: Socket,
@@ -104,7 +106,7 @@ export class EventsGateway
     socket.to(data.debateId).emit("answer", data.signal);
   }
 
-  //* 정보 송수신
+  //*- 정보 송수신
   @SubscribeMessage("peerVideo")
   handlePeerVideo(
     @ConnectedSocket() socket: Socket,
@@ -121,7 +123,7 @@ export class EventsGateway
     socket.to(data.debateId).emit("peerScreen", data.isScreenOn);
   }
 
-  //* 토론
+  //*- 토론
   @SubscribeMessage("ready")
   handleReady(
     @ConnectedSocket() socket: Socket,
