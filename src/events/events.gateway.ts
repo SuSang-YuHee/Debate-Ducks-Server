@@ -10,10 +10,7 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
-
-const roomIds = {};
-const roomDebates = {};
-//! roomId: { isClear: false, prosReady, consReady: count: 0,  }
+import { roomIds, roomDebates, debate } from "./utils";
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway
@@ -25,18 +22,35 @@ export class EventsGateway
     console.log("WebSocket Server Init");
   }
 
-  //* Room and WebRTC 연결 및 연결 해제
+  //*- 연결, 입장 및 연결 해제
   handleConnection(@ConnectedSocket() socket: Socket) {
     console.log("connection", socket.id);
   }
 
+  // * 연결 해제
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log("disconnection", socket.id);
+
     const roomId = roomIds[socket.id];
     delete roomIds[socket.id];
+
+    if (roomDebates[roomId]) {
+      roomDebates[roomId].size -= 1;
+
+      if (roomDebates[roomId].size < 1) {
+        if (!roomDebates[roomId].isStart) {
+          delete roomDebates[roomId];
+        } else {
+          roomDebates[roomId].isPause = true;
+          clearInterval(roomDebates[roomId].debate);
+        }
+      }
+    }
+
     socket.to(roomId).emit("peerDisconnect");
   }
 
+  // * 입장
   @SubscribeMessage("join")
   handleJoin(
     @ConnectedSocket() socket: Socket,
@@ -45,18 +59,37 @@ export class EventsGateway
     const roomSize =
       this.server.sockets.adapter.rooms.get(data.debateId)?.size || 0;
     if (roomSize < 2) {
+      console.log("join", data.debateId, socket.id);
+
       roomIds[socket.id] = data.debateId;
+      roomDebates[data.debateId] = roomDebates[data.debateId] || {};
+      roomDebates[data.debateId].size = roomDebates[data.debateId].size
+        ? roomDebates[data.debateId].size + 1
+        : 1;
+
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
 
-      if (roomDebates[data.debateId]?.isDebate) {
-        socket.emit("debate");
+      if (roomDebates[data.debateId]?.isStart) {
+        socket.emit("debateStart");
+
+        if (roomDebates[data.debateId]?.isPause) {
+          roomDebates[data.debateId].isPause = false;
+          roomDebates[data.debateId].debate = setInterval(
+            debate,
+            1000,
+            socket,
+            data.debateId,
+            roomDebates,
+          );
+        }
       }
     } else {
       socket.emit("overcapacity");
     }
   }
 
+  // * WebRTC 연결
   @SubscribeMessage("offer")
   handleOffer(
     @ConnectedSocket() socket: Socket,
@@ -73,7 +106,7 @@ export class EventsGateway
     socket.to(data.debateId).emit("answer", data.signal);
   }
 
-  //* 정보 송수신
+  //*- 정보 송수신
   @SubscribeMessage("peerVideo")
   handlePeerVideo(
     @ConnectedSocket() socket: Socket,
@@ -90,25 +123,38 @@ export class EventsGateway
     socket.to(data.debateId).emit("peerScreen", data.isScreenOn);
   }
 
-  //* 토론
+  //*- 토론
   @SubscribeMessage("ready")
   handleReady(
     @ConnectedSocket() socket: Socket,
     @MessageBody()
     data: { debateId: string; isReady: boolean; isPros: boolean },
   ) {
+    if (!data.debateId) return;
+
     const isReady = data.isPros ? "isProsReady" : "isConsReady";
     roomDebates[data.debateId] = roomDebates[data.debateId] || {};
     roomDebates[data.debateId][isReady] = data.isReady;
+
     if (
+      roomDebates[data.debateId].size === 2 &&
+      !roomDebates[data.debateId].isStart &&
       roomDebates[data.debateId].isProsReady &&
-      roomDebates[data.debateId].isConsReady &&
-      !roomDebates[data.debateId].isDebate
+      roomDebates[data.debateId].isConsReady
     ) {
-      //! Maybe 여기에 토론 함수 작성
-      roomDebates[data.debateId].isDebate = true;
-      socket.emit("debate");
-      socket.to(data.debateId).emit("debate");
+      roomDebates[data.debateId].isStart = true;
+      socket.emit("debateStart");
+      socket.to(data.debateId).emit("debateStart");
+
+      roomDebates[data.debateId].turn = 0;
+      roomDebates[data.debateId].timer = 3;
+      roomDebates[data.debateId].debate = setInterval(
+        debate,
+        1000,
+        socket,
+        data.debateId,
+        roomDebates,
+      );
     }
   }
 }
