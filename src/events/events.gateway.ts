@@ -82,6 +82,7 @@ export class EventsGateway
             data.debateId,
             roomDebates,
           );
+          socket.emit("recorder");
         }
       }
     } else {
@@ -172,6 +173,55 @@ export class EventsGateway
         data.debateId,
         roomDebates,
       );
+      socket.to(data.debateId).emit("recorder");
+    }
+  }
+
+  //*- 토론 종료
+  @SubscribeMessage("debateDone")
+  handleDebateDone(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    data: { debateId: string },
+  ) {
+    socket.emit("debateDone");
+    socket.emit("recordDone");
+    clearInterval(roomDebates[data.debateId].debate);
+  }
+
+  //*- 녹화
+  @SubscribeMessage("record")
+  handleRecord(
+    @MessageBody()
+    data: {
+      debateId: string;
+      data: Blob;
+    },
+  ) {
+    if (!roomDebates[data.debateId].blobs) {
+      roomDebates[data.debateId].blobs = [];
+    }
+    roomDebates[data.debateId].blobs.push(data.data);
+  }
+
+  //*- 녹화 종료
+  @SubscribeMessage("recordDone")
+  async handleRecordDone(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    data: {
+      debateId: string;
+    },
+  ) {
+    //! 임시 기능,
+    while (roomDebates[data.debateId].blobs.length > 0) {
+      const blob = roomDebates[data.debateId].blobs.shift();
+      console.log("blob", blob);
+      socket.emit("testDown", blob);
+      if (roomDebates[data.debateId].blobs.length === 0) {
+        socket.emit("testDown2");
+        delete roomDebates[data.debateId];
+      }
     }
   }
 }

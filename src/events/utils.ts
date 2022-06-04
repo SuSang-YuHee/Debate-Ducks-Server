@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import { Blob } from "buffer";
 
 interface IRoomId {
   [index: string]: string;
@@ -14,6 +15,7 @@ interface IRoomDebates {
     turn?: number;
     timer?: number;
     debate?: NodeJS.Timer;
+    blobs?: Blob[];
   };
 }
 
@@ -24,7 +26,7 @@ export const roomIds: IRoomId = {};
 export const roomDebates: IRoomDebates = {};
 
 export const DEBATE_DEFAULT: TDebate = [
-  ["잠시 후 토론이 시작됩니다.", 3],
+  ["", 3],
   ["찬성 측 입론", 240],
   ["반대 측 교차 조사", 180],
   ["반대 측 입론", 240],
@@ -49,7 +51,7 @@ export const debate = (
   socket.to(debateId).emit("debateProgress", data);
   roomDebates[debateId].timer -= 1;
 
-  if (roomDebates[debateId].timer < 1) {
+  if (roomDebates[debateId].timer < 1 && roomDebates[debateId].turn < 7) {
     roomDebates[debateId].turn += 1;
     roomDebates[debateId].timer = DEBATE_DEFAULT[roomDebates[debateId].turn][1];
   }
