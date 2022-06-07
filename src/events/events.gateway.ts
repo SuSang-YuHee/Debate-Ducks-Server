@@ -123,6 +123,23 @@ export class EventsGateway
     socket.to(data.debateId).emit("peerScreen", data.isScreenOn);
   }
 
+  @SubscribeMessage("skip")
+  handleSkip(@MessageBody() data: { debateId: string; isPros: boolean }) {
+    if (
+      roomDebates[data.debateId].timer > 3 &&
+      ((data.isPros &&
+        (roomDebates[data.debateId].turn === 1 ||
+          roomDebates[data.debateId].turn === 4 ||
+          roomDebates[data.debateId].turn === 5)) ||
+        (!data.isPros &&
+          (roomDebates[data.debateId].turn === 2 ||
+            roomDebates[data.debateId].turn === 3 ||
+            roomDebates[data.debateId].turn === 6)))
+    ) {
+      roomDebates[data.debateId].timer = 3;
+    }
+  }
+
   //*- 토론
   @SubscribeMessage("ready")
   handleReady(
