@@ -7,6 +7,7 @@ import { UsersModule } from "./users/users.module";
 import { EmailModule } from "./email/email.module";
 import emailConfig from "./config/emailConfig";
 import { validationSchema } from "./config/validationSchema";
+import { TypeOrmModule } from "@nestjs/typeorm";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { validationSchema } from "./config/validationSchema";
       isGlobal: true,
       validationSchema,
     }),
+    TypeOrmModule.forRoot(),
     EventsModule,
     UsersModule,
     EmailModule,
