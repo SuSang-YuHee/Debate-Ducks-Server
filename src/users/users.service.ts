@@ -3,7 +3,7 @@ import { EmailService } from "src/email/email.service";
 import { UserInfo } from "./UserInfo";
 import * as uuid from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Connection, Repository } from "typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { ulid } from "ulid";
 
@@ -13,6 +13,7 @@ export class UsersService {
     private emailService: EmailService,
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
+    private connection: Connection,
   ) {}
 
   async createUser(name: string, email: string, password: string) {
@@ -50,6 +51,55 @@ export class UsersService {
     user.password = password;
     user.signupVerifyToken = signupVerifyToken;
     await this.usersRepository.save(user);
+  }
+
+  private async saveUserUsingQueryRunner(
+    name: string,
+    email: string,
+    password: string,
+    signupVerifyToken: string,
+  ) {
+    const queryRunner = this.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = new UserEntity();
+      user.id = ulid();
+      user.name = name;
+      user.email = email;
+      user.password = password;
+      user.signupVerifyToken = signupVerifyToken;
+
+      await queryRunner.manager.save(user);
+
+      await queryRunner.commitTransaction();
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async saveUserUsingTransaction(
+    name: string,
+    email: string,
+    password: string,
+    signupVerifyToken: string,
+  ) {
+    await this.connection.transaction(async (manager) => {
+      const user = new UserEntity();
+      user.id = ulid();
+      user.name = name;
+      user.email = email;
+      user.password = password;
+      user.signupVerifyToken = signupVerifyToken;
+
+      await manager.save(user);
+
+      // throw new InternalServerErrorException();
+    });
   }
 
   private async checkUserExists(emailAddress: string): Promise<boolean> {
