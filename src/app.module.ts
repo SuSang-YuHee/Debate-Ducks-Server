@@ -14,6 +14,9 @@ import {
   utilities as nestWinstonModuleUtilities,
   WinstonModule,
 } from "nest-winston";
+import { HttpExceptionFilter } from "./exception/http-exception.filter";
+import { APP_FILTER } from "@nestjs/core";
+import { ExceptionModule } from "./exception/exception.module";
 
 @Module({
   imports: [
@@ -37,6 +40,7 @@ import {
       ],
     }),
     TypeOrmModule.forRoot(),
+    ExceptionModule,
     EventsModule,
     UsersModule,
     EmailModule,
