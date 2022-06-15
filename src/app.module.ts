@@ -17,6 +17,7 @@ import {
 import { HttpExceptionFilter } from "./exception/http-exception.filter";
 import { APP_FILTER } from "@nestjs/core";
 import { ExceptionModule } from "./exception/exception.module";
+import { LoggingModule } from "./logging/logging.module";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ExceptionModule } from "./exception/exception.module";
     }),
     TypeOrmModule.forRoot(),
     ExceptionModule,
+    LoggingModule,
     EventsModule,
     UsersModule,
     EmailModule,
