@@ -3,11 +3,17 @@ import {
   Controller,
   Get,
   Headers,
+  Inject,
+  InternalServerErrorException,
   Param,
   Post,
   Query,
   UseGuards,
+  LoggerService,
+  Logger,
 } from "@nestjs/common";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { AuthGuard } from "src/auth.guard";
 import { AuthService } from "src/auth/auth.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -19,12 +25,16 @@ import { UsersService } from "./users.service";
 @Controller("users")
 export class UsersController {
   constructor(
+    @Inject(Logger)
+    private readonly logger: LoggerService,
     private usersService: UsersService,
     private authService: AuthService,
   ) {}
 
   @Post()
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
+    // this.printMyLog(dto);
+    this.printLoggerServiceLog(dto);
     const { name, email, password } = dto;
     await this.usersService.createUser(name, email, password);
   }
@@ -54,5 +64,29 @@ export class UsersController {
     this.authService.verify(jwtString);
 
     return this.usersService.getUserInfo(userId);
+  }
+
+  // private printMyLog(dto) {
+  //   console.log(this.logger.name);
+
+  //   this.logger.error("error: ", dto);
+  //   this.logger.warn("warn: ", dto);
+  //   this.logger.info("info: ", dto);
+  //   this.logger.http("http: ", dto);
+  //   this.logger.verbose("verbose: ", dto);
+  //   this.logger.debug("debug: ", dto);
+  //   this.logger.silly("silly: ", dto);
+  // }
+
+  private printLoggerServiceLog(dto) {
+    try {
+      throw new InternalServerErrorException("For test");
+    } catch (e) {
+      this.logger.error("error: " + JSON.stringify(dto), e.stack);
+    }
+    this.logger.warn("warn: " + JSON.stringify(dto));
+    this.logger.log("log: " + JSON.stringify(dto));
+    this.logger.verbose("verbose: " + JSON.stringify(dto));
+    this.logger.debug("debug: " + JSON.stringify(dto));
   }
 }

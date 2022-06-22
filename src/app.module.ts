@@ -9,6 +9,11 @@ import emailConfig from "./config/emailConfig";
 import { validationSchema } from "./config/validationSchema";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import authConfig from "./config/authConfig";
+import * as winston from "winston";
+import {
+  utilities as nestWinstonModuleUtilities,
+  WinstonModule,
+} from "nest-winston";
 
 @Module({
   imports: [
@@ -17,6 +22,19 @@ import authConfig from "./config/authConfig";
       load: [emailConfig, authConfig],
       isGlobal: true,
       validationSchema,
+    }),
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({
+          level: process.env.NODE_ENV === "production" ? "info" : "silly",
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            nestWinstonModuleUtilities.format.nestLike("MyApp", {
+              prettyPrint: true,
+            }),
+          ),
+        }),
+      ],
     }),
     TypeOrmModule.forRoot(),
     EventsModule,
