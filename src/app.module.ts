@@ -18,6 +18,9 @@ import { HttpExceptionFilter } from "./exception/http-exception.filter";
 import { APP_FILTER } from "@nestjs/core";
 import { ExceptionModule } from "./exception/exception.module";
 import { LoggingModule } from "./logging/logging.module";
+import { HealthCheckController } from "./health-check/health-check.controller";
+import { TerminusModule } from "@nestjs/terminus";
+import { HttpModule } from "@nestjs/axios";
 
 @Module({
   imports: [
@@ -46,8 +49,10 @@ import { LoggingModule } from "./logging/logging.module";
     EventsModule,
     UsersModule,
     EmailModule,
+    TerminusModule,
+    HttpModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthCheckController],
   providers: [AppService],
 })
 export class AppModule {}
