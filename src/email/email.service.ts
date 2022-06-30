@@ -1,11 +1,11 @@
-import { Inject, Injectable } from "@nestjs/common";
-import Mail from "nodemailer/lib/mailer";
+import Mail = require("nodemailer/lib/mailer");
 import * as nodemailer from "nodemailer";
+
+import { Inject, Injectable } from "@nestjs/common";
 import emailConfig from "src/config/emailConfig";
 import { ConfigType } from "@nestjs/config";
 
 interface EmailOptions {
-  from: string;
   to: string;
   subject: string;
   html: string;
@@ -20,8 +20,6 @@ export class EmailService {
   ) {
     this.transporter = nodemailer.createTransport({
       service: config.service,
-      host: config.host,
-      port: 465,
       auth: {
         user: config.auth.user,
         pass: config.auth.pass,
@@ -38,7 +36,6 @@ export class EmailService {
     const url = `${baseUrl}/users/email-verify?signupVerifyToken=${signupVerifyToken}`;
 
     const mailOptions: EmailOptions = {
-      from: this.config.auth.user,
       to: emailAddress,
       subject: "가입 인증 메일",
       html: `
