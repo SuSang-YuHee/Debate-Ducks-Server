@@ -21,6 +21,9 @@ import { LoggingModule } from "./logging/logging.module";
 import { HealthCheckController } from "./health-check/health-check.controller";
 import { TerminusModule } from "@nestjs/terminus";
 import { HttpModule } from "@nestjs/axios";
+import { DebatesController } from "./debates/debates.controller";
+import { DebatesService } from "./debates/debates.service";
+import { DebatesModule } from "./debates/debates.module";
 
 @Module({
   imports: [
@@ -51,6 +54,7 @@ import { HttpModule } from "@nestjs/axios";
     EmailModule,
     TerminusModule,
     HttpModule,
+    DebatesModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
