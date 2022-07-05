@@ -127,7 +127,7 @@ export class EventsGateway
   @SubscribeMessage("skip")
   handleSkip(@MessageBody() data: { debateId: string; isPros: boolean }) {
     if (
-      roomDebates[data.debateId].timer > 3 &&
+      roomDebates[data.debateId].timer > 1 &&
       ((data.isPros &&
         (roomDebates[data.debateId].turn === 1 ||
           roomDebates[data.debateId].turn === 4 ||
@@ -137,7 +137,7 @@ export class EventsGateway
             roomDebates[data.debateId].turn === 3 ||
             roomDebates[data.debateId].turn === 6)))
     ) {
-      roomDebates[data.debateId].timer = 3;
+      roomDebates[data.debateId].timer = 1;
     }
   }
 
