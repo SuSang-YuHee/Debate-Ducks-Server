@@ -1,5 +1,4 @@
 import { Socket } from "socket.io";
-import { Blob } from "buffer";
 
 interface IRoomId {
   [index: string]: string;
@@ -15,7 +14,6 @@ interface IRoomDebates {
     turn?: number;
     timer?: number;
     debate?: NodeJS.Timer;
-    blobs?: Blob[];
   };
 }
 
