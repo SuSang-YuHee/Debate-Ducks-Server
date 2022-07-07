@@ -1,4 +1,5 @@
 export class UpdateDebateDto {
+  id: number;
   author: string;
   title: string;
   contents: string;
