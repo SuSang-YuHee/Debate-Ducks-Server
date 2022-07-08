@@ -3,54 +3,22 @@ import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayInit,
-  OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
   MessageBody,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
-import { roomIds, roomDebates, debate } from "./utils";
+import { roomOfId, idOfRoom, debate } from "./utils";
 
-@WebSocketGateway({ cors: { origin: "*" } })
-export class EventsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+@WebSocketGateway({ cors: { origin: "*" } }) //! 주소 지정 필요
+export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
-
   afterInit() {
     console.log("WebSocket Server Init");
   }
 
-  //*- 연결, 입장 및 연결 해제
-  handleConnection(@ConnectedSocket() socket: Socket) {
-    console.log("connection", socket.id);
-  }
-
-  // * 연결 해제
-  handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log("disconnection", socket.id);
-
-    const roomId = roomIds[socket.id];
-    delete roomIds[socket.id];
-
-    if (roomDebates[roomId]) {
-      roomDebates[roomId].size -= 1;
-
-      if (roomDebates[roomId].size < 1) {
-        if (!roomDebates[roomId].isStart) {
-          delete roomDebates[roomId];
-        } else {
-          roomDebates[roomId].isPause = true;
-          clearInterval(roomDebates[roomId].debate);
-        }
-      }
-    }
-
-    socket.to(roomId).emit("peerDisconnect");
-  }
-
-  // * 입장
+  //*- 연결
   @SubscribeMessage("join")
   handleJoin(
     @ConnectedSocket() socket: Socket,
@@ -58,38 +26,46 @@ export class EventsGateway
   ) {
     const roomSize =
       this.server.sockets.adapter.rooms.get(data.debateId)?.size || 0;
+
     if (roomSize < 2) {
       console.log("join", data.debateId, socket.id);
 
-      roomIds[socket.id] = data.debateId;
-      roomDebates[data.debateId] = roomDebates[data.debateId] || {};
-      roomDebates[data.debateId].size = roomDebates[data.debateId].size
-        ? roomDebates[data.debateId].size + 1
-        : 1;
+      roomOfId[socket.id] = { debateId: data.debateId };
+      idOfRoom[data.debateId] = idOfRoom[data.debateId] || {
+        size: 0,
+        isProsReady: false,
+        isConsReady: false,
+        isStart: false,
+        isPause: false,
+        turn: -1,
+        timer: -1,
+        debate: null,
+      };
+
+      idOfRoom[data.debateId].size += 1;
 
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
 
-      if (roomDebates[data.debateId]?.isStart) {
-        socket.emit("debateStart");
+      if (!idOfRoom[data.debateId].isStart) return;
 
-        if (roomDebates[data.debateId]?.isPause) {
-          roomDebates[data.debateId].isPause = false;
-          roomDebates[data.debateId].debate = setInterval(
-            debate,
-            1000,
-            socket,
-            data.debateId,
-            roomDebates,
-          );
-        }
-      }
+      socket.emit("debateStart");
+
+      if (!idOfRoom[data.debateId].isPause) return;
+
+      idOfRoom[data.debateId].isPause = false;
+      idOfRoom[data.debateId].debate = setInterval(
+        debate,
+        1000,
+        socket,
+        data.debateId,
+        idOfRoom,
+      );
     } else {
       socket.emit("overcapacity");
     }
   }
 
-  // * WebRTC 연결
   @SubscribeMessage("offer")
   handleOffer(
     @ConnectedSocket() socket: Socket,
@@ -104,6 +80,32 @@ export class EventsGateway
     @MessageBody() data: { debateId: string; signal: Peer.SignalData },
   ) {
     socket.to(data.debateId).emit("answer", data.signal);
+  }
+
+  //*- 연결 해제
+  handleDisconnect(@ConnectedSocket() socket: Socket) {
+    if (!roomOfId[socket.id]) return;
+
+    const debateId = roomOfId[socket.id].debateId;
+
+    delete roomOfId[socket.id];
+
+    if (!idOfRoom[debateId]) return;
+
+    console.log("disconnection", debateId, socket.id);
+
+    idOfRoom[debateId].size -= 1;
+
+    socket.to(debateId).emit("peerDisconnect");
+
+    if (idOfRoom[debateId].size > 0) return;
+
+    if (!idOfRoom[debateId].isStart) {
+      delete idOfRoom[debateId];
+    } else {
+      idOfRoom[debateId].isPause = true;
+      clearInterval(idOfRoom[debateId].debate);
+    }
   }
 
   //*- 정보 송수신
@@ -126,53 +128,52 @@ export class EventsGateway
   @SubscribeMessage("skip")
   handleSkip(@MessageBody() data: { debateId: string; isPros: boolean }) {
     if (
-      roomDebates[data.debateId].timer > 1 &&
+      idOfRoom[data.debateId].timer > 1 &&
       ((data.isPros &&
-        (roomDebates[data.debateId].turn === 1 ||
-          roomDebates[data.debateId].turn === 4 ||
-          roomDebates[data.debateId].turn === 5)) ||
+        (idOfRoom[data.debateId].turn === 1 ||
+          idOfRoom[data.debateId].turn === 4 ||
+          idOfRoom[data.debateId].turn === 5)) ||
         (!data.isPros &&
-          (roomDebates[data.debateId].turn === 2 ||
-            roomDebates[data.debateId].turn === 3 ||
-            roomDebates[data.debateId].turn === 6)))
+          (idOfRoom[data.debateId].turn === 2 ||
+            idOfRoom[data.debateId].turn === 3 ||
+            idOfRoom[data.debateId].turn === 6)))
     ) {
-      roomDebates[data.debateId].timer = 1;
+      idOfRoom[data.debateId].timer = 1;
     }
   }
 
-  //*- 토론
+  //*- 토론 시작
   @SubscribeMessage("ready")
   handleReady(
     @ConnectedSocket() socket: Socket,
     @MessageBody()
     data: { debateId: string; isReady: boolean; isPros: boolean },
   ) {
-    if (!data.debateId) return;
+    if (!idOfRoom[data.debateId]) return;
 
     const isReady = data.isPros ? "isProsReady" : "isConsReady";
-    roomDebates[data.debateId] = roomDebates[data.debateId] || {};
-    roomDebates[data.debateId][isReady] = data.isReady;
+    idOfRoom[data.debateId][isReady] = data.isReady;
 
     if (
-      roomDebates[data.debateId].size === 2 &&
-      !roomDebates[data.debateId].isStart &&
-      roomDebates[data.debateId].isProsReady &&
-      roomDebates[data.debateId].isConsReady
+      idOfRoom[data.debateId].size === 2 &&
+      !idOfRoom[data.debateId].isStart &&
+      idOfRoom[data.debateId].isProsReady &&
+      idOfRoom[data.debateId].isConsReady
     ) {
-      roomDebates[data.debateId].isStart = true;
-      socket.emit("debateStart");
-      socket.to(data.debateId).emit("debateStart");
+      idOfRoom[data.debateId].isStart = true;
 
-      roomDebates[data.debateId].turn = 0;
-      roomDebates[data.debateId].timer = 3;
-      roomDebates[data.debateId].debate = setInterval(
+      idOfRoom[data.debateId].turn = 0;
+      idOfRoom[data.debateId].timer = 3;
+      idOfRoom[data.debateId].debate = setInterval(
         debate,
         1000,
         socket,
         data.debateId,
-        roomDebates,
+        idOfRoom,
       );
-      socket.to(data.debateId).emit("recorder");
+
+      socket.emit("debateStart");
+      socket.to(data.debateId).emit("debateStart");
     }
   }
 
@@ -183,8 +184,9 @@ export class EventsGateway
     @MessageBody()
     data: { debateId: string },
   ) {
-    socket.emit("debateDone");
-    socket.emit("recordDone");
-    clearInterval(roomDebates[data.debateId].debate);
+    if (!idOfRoom[data.debateId]) return;
+
+    clearInterval(idOfRoom[data.debateId].debate);
+    delete idOfRoom[data.debateId];
   }
 }
