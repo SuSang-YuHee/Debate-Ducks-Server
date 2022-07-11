@@ -80,7 +80,7 @@ export class UsersController {
 
   private printLoggerServiceLog(dto) {
     try {
-      throw new InternalServerErrorException("For test");
+      // throw new InternalServerErrorException("For test");
     } catch (e) {
       this.logger.error("error: " + JSON.stringify(dto), e.stack);
     }
