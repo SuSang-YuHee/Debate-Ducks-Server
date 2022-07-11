@@ -7,6 +7,7 @@
   "database": "test",
   "entities": ["dist/**/*.entity{.ts,.js}"],
   "synchronize": false,
+  "timezone": "local",
   "migrations": ["dist/migrations/*{.ts,.js}"],
   "cli": {
     "migrationsDir": "src/migrations"
