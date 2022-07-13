@@ -9,9 +9,9 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
-import { roomOfId, idOfRoom, debate } from "./utils";
+import { roomOfId, idOfRoom, debate, pause } from "./utils";
 
-@WebSocketGateway({ cors: { origin: "*" } }) //! 주소 지정 필요
+@WebSocketGateway({ cors: { origin: "*" } }) //Todo: 주소 지정 필요
 export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
   afterInit() {
@@ -22,15 +22,14 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage("join")
   handleJoin(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() data: { debateId: string },
+    @MessageBody() data: { debateId: string; isPros: boolean },
   ) {
     const roomSize =
       this.server.sockets.adapter.rooms.get(data.debateId)?.size || 0;
 
     if (roomSize < 2) {
-      console.log("join", data.debateId, socket.id);
-
-      roomOfId[socket.id] = { debateId: data.debateId };
+      console.log(`Join / Debate: ${data.debateId} / Id: ${socket.id}`);
+      roomOfId[socket.id] = { debateId: data.debateId, isPros: data.isPros };
       idOfRoom[data.debateId] = idOfRoom[data.debateId] || {
         size: 0,
         isProsReady: false,
@@ -39,27 +38,47 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
         turn: -1,
         timer: -1,
         debate: null,
+        pausePros: 3,
+        pauseCons: 3,
+        pauseTimer: 60,
+        pause: null,
+        blobs: [],
       };
 
-      idOfRoom[data.debateId].size += 1;
+      if (idOfRoom[data.debateId].pause) {
+        clearInterval(idOfRoom[data.debateId].pause);
+      }
 
+      if (idOfRoom[data.debateId].pausePros < 0) {
+        console.log("토론 패배", "pausePros"); //Todo:
+        return;
+      }
+
+      if (idOfRoom[data.debateId].pauseCons < 0) {
+        console.log("토론 패배", "pauseCons"); //Todo:
+        return;
+      }
+
+      idOfRoom[data.debateId].size += 1;
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
 
       if (!idOfRoom[data.debateId].isStart) return;
+
       socket.emit("debateStart");
       socket.emit("debatePause", true);
 
-      if (idOfRoom[data.debateId].size < 2) return;
-      idOfRoom[data.debateId].debate = setInterval(
-        debate,
-        1000,
-        socket,
-        data.debateId,
-        idOfRoom,
-      );
-      socket.emit("debatePause", false);
-      socket.to(data.debateId).emit("debatePause", false);
+      if (idOfRoom[data.debateId].size >= 2) {
+        idOfRoom[data.debateId].debate = setInterval(
+          debate,
+          1000,
+          socket,
+          data.debateId,
+          idOfRoom,
+        );
+        socket.emit("debatePause", false);
+        socket.to(data.debateId).emit("debatePause", false);
+      }
     } else {
       socket.emit("overcapacity");
     }
@@ -86,24 +105,29 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (!roomOfId[socket.id]) return;
 
     const debateId = roomOfId[socket.id].debateId;
-
+    const isPros = roomOfId[socket.id].isPros;
+    const isPause = isPros ? "pausePros" : "pauseCons";
     delete roomOfId[socket.id];
 
     if (!idOfRoom[debateId]) return;
 
-    console.log("disconnection", debateId, socket.id);
-
+    console.log(`Disconnection / Debate: ${debateId} / Id: ${socket.id}`);
     idOfRoom[debateId].size -= 1;
-
     socket.to(debateId).emit("peerDisconnect");
-
-    if (idOfRoom[debateId].size > 0) return;
 
     if (!idOfRoom[debateId].isStart) {
       delete idOfRoom[debateId];
-    } else {
-      clearInterval(idOfRoom[debateId].debate);
+      return;
     }
+
+    if (idOfRoom[debateId].size >= 1) {
+      idOfRoom[debateId][isPause] -= 1;
+      return;
+    }
+
+    clearInterval(idOfRoom[debateId].debate);
+    idOfRoom[debateId].pauseTimer = 60;
+    idOfRoom[debateId].pause = setInterval(pause, 1000, debateId, idOfRoom);
   }
 
   //*- 정보 송수신
@@ -159,7 +183,6 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
       idOfRoom[data.debateId].isConsReady
     ) {
       idOfRoom[data.debateId].isStart = true;
-
       idOfRoom[data.debateId].turn = 0;
       idOfRoom[data.debateId].timer = 3;
       idOfRoom[data.debateId].debate = setInterval(
@@ -169,7 +192,6 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
         data.debateId,
         idOfRoom,
       );
-
       socket.emit("debateStart");
       socket.to(data.debateId).emit("debateStart");
     }
@@ -184,8 +206,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   ) {
     if (!idOfRoom[data.debateId]) return;
 
-    socket.emit("debateDone", true);
-    socket.to(data.debateId).emit("debateDone", false);
+    console.log("토론 종료", data.winner); //!
 
     clearInterval(idOfRoom[data.debateId].debate);
     delete idOfRoom[data.debateId];

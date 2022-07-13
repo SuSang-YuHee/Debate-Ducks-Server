@@ -3,6 +3,7 @@ import { Socket } from "socket.io";
 interface IRoomId {
   [index: string]: {
     debateId: string;
+    isPros: boolean;
   };
 }
 
@@ -15,16 +16,17 @@ interface IRoomDebates {
     turn: -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
     timer: number;
     debate: NodeJS.Timer;
+    pausePros: 0 | 1 | 2 | 3;
+    pauseCons: 0 | 1 | 2 | 3;
+    pauseTimer: number;
+    pause: NodeJS.Timer;
+    blobs: Blob[];
   };
 }
 
-type TDebate = [string, number][];
-
 export const roomOfId: IRoomId = {};
-
 export const idOfRoom: IRoomDebates = {};
-
-export const DEBATE: TDebate = [
+export const DEBATE: [string, number][] = [
   ["", 3],
   ["찬성 측 입론", 240],
   ["반대 측 교차 조사", 180],
@@ -50,10 +52,17 @@ export const debate = (
   socket.to(debateId).emit("debate", data);
   idOfRoom[debateId].timer -= 1;
 
-  if (idOfRoom[debateId].turn >= 7) return;
-
-  if (idOfRoom[debateId].timer < 1) {
+  if (idOfRoom[debateId].timer < 1 && idOfRoom[debateId].turn < 7) {
     idOfRoom[debateId].turn += 1;
     idOfRoom[debateId].timer = DEBATE[idOfRoom[debateId].turn][1];
+  }
+};
+
+export const pause = (debateId: string, idOfRoom: IRoomDebates) => {
+  idOfRoom[debateId].pauseTimer -= 1;
+  if (idOfRoom[debateId].pauseTimer < 0) {
+    clearInterval(idOfRoom[debateId].pause);
+    delete idOfRoom[debateId];
+    console.log(`Cancel / Debate: ${debateId}`);
   }
 };
