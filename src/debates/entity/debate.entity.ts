@@ -1,12 +1,20 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { UserEntity } from "src/users/entity/user.entity";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from "typeorm";
 
 @Entity("Debate")
 export class DebateEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  author: string;
+  @ManyToOne((type) => UserEntity, (author) => author.debates)
+  author: UserEntity;
 
   @Column()
   category: string;
@@ -17,21 +25,32 @@ export class DebateEntity {
   @Column()
   contents: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   video_url: string;
 
-  @Column()
-  participant: string;
+  @ManyToOne(
+    (type) => UserEntity,
+    (participant) => participant.participant_debates,
+  )
+  participant: UserEntity;
 
   @Column()
   author_pros: boolean;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   created_date: Date;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   updated_date: Date;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   ended_date: Date;
 }
