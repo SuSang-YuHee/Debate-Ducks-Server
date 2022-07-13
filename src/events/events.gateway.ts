@@ -36,7 +36,6 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
         isProsReady: false,
         isConsReady: false,
         isStart: false,
-        isPause: false,
         turn: -1,
         timer: -1,
         debate: null,
@@ -48,12 +47,10 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
       socket.to(data.debateId).emit("guestJoin");
 
       if (!idOfRoom[data.debateId].isStart) return;
-
       socket.emit("debateStart");
+      socket.emit("debatePause", true);
 
-      if (!idOfRoom[data.debateId].isPause) return;
-
-      idOfRoom[data.debateId].isPause = false;
+      if (idOfRoom[data.debateId].size < 2) return;
       idOfRoom[data.debateId].debate = setInterval(
         debate,
         1000,
@@ -61,6 +58,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
         data.debateId,
         idOfRoom,
       );
+      socket.emit("debatePause", false);
+      socket.to(data.debateId).emit("debatePause", false);
     } else {
       socket.emit("overcapacity");
     }
@@ -103,7 +102,6 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (!idOfRoom[debateId].isStart) {
       delete idOfRoom[debateId];
     } else {
-      idOfRoom[debateId].isPause = true;
       clearInterval(idOfRoom[debateId].debate);
     }
   }
@@ -182,7 +180,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   handleDebateDone(
     @ConnectedSocket() socket: Socket,
     @MessageBody()
-    data: { debateId: string },
+    data: { debateId: string; winner: boolean },
   ) {
     if (!idOfRoom[data.debateId]) return;
 

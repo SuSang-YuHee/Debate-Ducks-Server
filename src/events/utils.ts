@@ -12,7 +12,6 @@ interface IRoomDebates {
     isProsReady: boolean;
     isConsReady: boolean;
     isStart: boolean;
-    isPause: boolean;
     turn: -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
     timer: number;
     debate: NodeJS.Timer;
