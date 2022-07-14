@@ -24,6 +24,9 @@ import { HttpModule } from "@nestjs/axios";
 import { DebatesController } from "./debates/debates.controller";
 import { DebatesService } from "./debates/debates.service";
 import { DebatesModule } from "./debates/debates.module";
+import { FactchecksController } from "./factchecks/factchecks.controller";
+import { FactchecksService } from "./factchecks/factchecks.service";
+import { FactchecksModule } from "./factchecks/factchecks.module";
 
 @Module({
   imports: [
@@ -55,6 +58,7 @@ import { DebatesModule } from "./debates/debates.module";
     TerminusModule,
     HttpModule,
     DebatesModule,
+    FactchecksModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
