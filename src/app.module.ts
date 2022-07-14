@@ -14,19 +14,14 @@ import {
   utilities as nestWinstonModuleUtilities,
   WinstonModule,
 } from "nest-winston";
-import { HttpExceptionFilter } from "./exception/http-exception.filter";
-import { APP_FILTER } from "@nestjs/core";
 import { ExceptionModule } from "./exception/exception.module";
 import { LoggingModule } from "./logging/logging.module";
 import { HealthCheckController } from "./health-check/health-check.controller";
 import { TerminusModule } from "@nestjs/terminus";
 import { HttpModule } from "@nestjs/axios";
-import { DebatesController } from "./debates/debates.controller";
-import { DebatesService } from "./debates/debates.service";
 import { DebatesModule } from "./debates/debates.module";
-import { FactchecksController } from "./factchecks/factchecks.controller";
-import { FactchecksService } from "./factchecks/factchecks.service";
 import { FactchecksModule } from "./factchecks/factchecks.module";
+import { VotesModule } from "./votes/votes.module";
 
 @Module({
   imports: [
@@ -59,6 +54,7 @@ import { FactchecksModule } from "./factchecks/factchecks.module";
     HttpModule,
     DebatesModule,
     FactchecksModule,
+    VotesModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
