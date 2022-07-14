@@ -1,11 +1,13 @@
+import { UserEntity } from "src/users/entity/user.entity";
+
 export interface DebateInfo {
   id: number;
-  author: string;
+  author: UserEntity;
   title: string;
   contents: string;
   category: string;
   video_url: string;
-  participant: string;
+  participant: UserEntity;
   author_pros: boolean;
   created_date: Date;
   updated_date: Date;
