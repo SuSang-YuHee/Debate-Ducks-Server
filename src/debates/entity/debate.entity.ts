@@ -1,3 +1,4 @@
+import { CommentEntity } from "src/comments/entities/comment.entity";
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -64,4 +65,7 @@ export class DebateEntity {
 
   @OneToMany((type) => HeartEntity, (heart) => heart.target_debate)
   hearts: HeartEntity[];
+
+  @OneToMany((type) => CommentEntity, (comment) => comment.target_debate)
+  comments: CommentEntity[];
 }
