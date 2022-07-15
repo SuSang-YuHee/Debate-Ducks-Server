@@ -21,6 +21,7 @@ interface IRoomDebates {
     pauseTimer: number;
     pause: NodeJS.Timer;
     blobs: Blob[];
+    results: Blob[][];
   };
 }
 
@@ -65,4 +66,39 @@ export const pause = (debateId: string, idOfRoom: IRoomDebates) => {
     delete idOfRoom[debateId];
     console.log(`Cancel / Debate: ${debateId}`);
   }
+};
+
+export const restart = (socket: Socket, debateId: string) => {
+  const data = {
+    notice: "잠시만 기다려 주십시오. 곧 토론이 재시작 합니다.",
+    turn: -1,
+    timer: -1,
+  };
+  socket.emit("debate", data);
+  socket.to(debateId).emit("debate", data);
+};
+
+export const debateDone = (socket: Socket, debateId: string) => {
+  if (!idOfRoom[debateId]) return;
+
+  socket.emit("debateDone");
+  socket.to(debateId).emit("debateDone");
+
+  if (idOfRoom[debateId].blobs.length > 0) {
+    idOfRoom[debateId].results.push(idOfRoom[debateId].blobs);
+  }
+
+  //! 개발중
+  const results = idOfRoom[debateId].results;
+  results.forEach((blobs, i) => {
+    blobs.forEach((blob, j) => {
+      if (i === 0 || j !== 1) {
+        socket.emit("tempRecord", blob);
+        socket.to(debateId).emit("tempRecord", blob);
+      }
+    });
+  });
+
+  if (idOfRoom[debateId].debate) clearInterval(idOfRoom[debateId].debate);
+  delete idOfRoom[debateId];
 };

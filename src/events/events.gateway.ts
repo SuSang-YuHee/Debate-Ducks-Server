@@ -9,7 +9,14 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
-import { roomOfId, idOfRoom, debate, pause } from "./utils";
+import {
+  roomOfId,
+  idOfRoom,
+  debate,
+  pause,
+  restart,
+  debateDone,
+} from "./utils";
 
 @WebSocketGateway({ cors: { origin: "*" } }) //Todo: 주소 지정 필요
 export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
@@ -43,19 +50,25 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
         pauseTimer: 60,
         pause: null,
         blobs: [],
+        results: [],
       };
 
       if (idOfRoom[data.debateId].pause) {
         clearInterval(idOfRoom[data.debateId].pause);
+        idOfRoom[data.debateId].pause = null;
       }
 
-      if (idOfRoom[data.debateId].pausePros < 0) {
-        console.log("토론 패배", "pausePros"); //Todo:
-        return;
-      }
-
-      if (idOfRoom[data.debateId].pauseCons < 0) {
-        console.log("토론 패배", "pauseCons"); //Todo:
+      //Todo: 종료 로직
+      if (
+        idOfRoom[data.debateId].pausePros < 0 ||
+        idOfRoom[data.debateId].pauseCons < 0
+      ) {
+        let isPros = true;
+        if (idOfRoom[data.debateId].pauseCons < 0) {
+          isPros = false;
+        }
+        console.log("토론 패배: 퇴장 횟수 초과", isPros);
+        debateDone(socket, data.debateId);
         return;
       }
 
@@ -63,19 +76,26 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
       socket.join(data.debateId);
       socket.to(data.debateId).emit("guestJoin");
 
+      if (idOfRoom[data.debateId].size === 1) {
+        socket.emit("isHost");
+      }
+
       if (!idOfRoom[data.debateId].isStart) return;
 
-      socket.emit("debateStart");
       socket.emit("debatePause", true);
+      socket.emit("debateStart");
 
       if (idOfRoom[data.debateId].size >= 2) {
-        idOfRoom[data.debateId].debate = setInterval(
-          debate,
-          1000,
-          socket,
-          data.debateId,
-          idOfRoom,
-        );
+        restart(socket, data.debateId);
+        setTimeout(() => {
+          idOfRoom[data.debateId].debate = setInterval(
+            debate,
+            1000,
+            socket,
+            data.debateId,
+            idOfRoom,
+          );
+        }, 2000);
         socket.emit("debatePause", false);
         socket.to(data.debateId).emit("debatePause", false);
       }
@@ -126,8 +146,14 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     }
 
     clearInterval(idOfRoom[debateId].debate);
+    idOfRoom[debateId].debate = null;
     idOfRoom[debateId].pauseTimer = 60;
     idOfRoom[debateId].pause = setInterval(pause, 1000, debateId, idOfRoom);
+
+    if (idOfRoom[debateId].blobs.length > 0) {
+      idOfRoom[debateId].results.push(idOfRoom[debateId].blobs);
+      idOfRoom[debateId].blobs = [];
+    }
   }
 
   //*- 정보 송수신
@@ -197,6 +223,18 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     }
   }
 
+  //*- 녹화
+  @SubscribeMessage("record")
+  handleRecord(
+    @MessageBody()
+    data: {
+      debateId: string;
+      blob: Blob;
+    },
+  ) {
+    if (idOfRoom[data.debateId]) idOfRoom[data.debateId].blobs.push(data.blob);
+  }
+
   //*- 토론 종료
   @SubscribeMessage("debateDone")
   handleDebateDone(
@@ -204,11 +242,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     @MessageBody()
     data: { debateId: string; winner: boolean },
   ) {
-    if (!idOfRoom[data.debateId]) return;
-
-    console.log("토론 종료", data.winner); //!
-
-    clearInterval(idOfRoom[data.debateId].debate);
-    delete idOfRoom[data.debateId];
+    console.log("토론 종료", data.winner, socket.id);
+    debateDone(socket, data.debateId);
   }
 }
