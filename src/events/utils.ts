@@ -4,53 +4,49 @@ interface IRoomId {
   [index: string]: string;
 }
 
-interface IRoomDebates {
+interface IRoomInfo {
   [index: string]: {
-    size?: number;
-    isProsReady?: boolean;
-    isConsReady?: boolean;
-    isStart?: boolean;
-    isPause?: boolean;
-    turn?: number;
-    timer?: number;
-    debate?: NodeJS.Timer;
+    size: 0 | 1 | 2;
+    isProsReady: boolean;
+    isConsReady: boolean;
+    debate: NodeJS.Timer;
+    turn: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    time: number;
   };
 }
 
-type TDebate = [string, number][];
-
-export const roomIds: IRoomId = {};
-
-export const roomDebates: IRoomDebates = {};
-
-export const DEBATE_DEFAULT: TDebate = [
-  ["잠시 후 토론이 시작됩니다.", 3],
+export const roomId: IRoomId = {};
+export const roomInfo: IRoomInfo = {};
+export const DEBATE: [string, number][] = [
+  ["토론이 곧 시작됩니다.", 3],
   ["찬성 측 입론", 240],
   ["반대 측 교차 조사", 180],
   ["반대 측 입론", 240],
   ["찬성 측 교차 조사", 180],
   ["찬성 측 반론 및 요약", 180],
   ["반대 측 반론 및 요약", 180],
-  ["토론이 종료되었습니다.", 3],
+  ["토론이 종료되었습니다.", 0],
 ];
 
 export const debate = (
   socket: Socket,
   debateId: string,
-  roomDebates: IRoomDebates,
+  roomInfo: IRoomInfo,
 ) => {
+  if (!roomInfo[debateId]) return;
+
   const data = {
-    notice: DEBATE_DEFAULT[roomDebates[debateId].turn][0],
-    turn: roomDebates[debateId].turn,
-    timer: roomDebates[debateId].timer,
+    notice: DEBATE[roomInfo[debateId].turn][0],
+    turn: roomInfo[debateId].turn,
+    time: roomInfo[debateId].time,
   };
 
-  socket.emit("debateProgress", data);
-  socket.to(debateId).emit("debateProgress", data);
-  roomDebates[debateId].timer -= 1;
+  roomInfo[debateId].time -= 1;
+  socket.emit("debate", data);
+  socket.to(debateId).emit("debate", data);
 
-  if (roomDebates[debateId].timer < 1) {
-    roomDebates[debateId].turn += 1;
-    roomDebates[debateId].timer = DEBATE_DEFAULT[roomDebates[debateId].turn][1];
+  if (roomInfo[debateId].turn < 7 && roomInfo[debateId].time < 1) {
+    roomInfo[debateId].turn += 1;
+    roomInfo[debateId].time = DEBATE[roomInfo[debateId].turn][1];
   }
 };
