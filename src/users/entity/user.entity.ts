@@ -1,3 +1,4 @@
+import { AlarmEntity } from "src/alarms/entities/alarm.entity";
 import { CommentEntity } from "src/comments/entities/comment.entity";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
@@ -39,4 +40,7 @@ export class UserEntity {
 
   @OneToMany((type) => CommentEntity, (comment) => comment.target_user)
   comments: CommentEntity[];
+
+  @OneToMany((type) => AlarmEntity, (alarm) => alarm.receiver)
+  alarms: AlarmEntity[];
 }
