@@ -1,5 +1,6 @@
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
 import { UserEntity } from "src/users/entity/user.entity";
+import { VoteEntity } from "src/votes/entity/vote.entity";
 import {
   Column,
   Entity,
@@ -56,4 +57,7 @@ export class DebateEntity {
 
   @OneToMany((type) => FactcheckEntity, (factcheck) => factcheck.target_debate)
   factchecks: FactcheckEntity[];
+
+  @OneToMany((type) => VoteEntity, (vote) => vote.target_debate)
+  votes: VoteEntity[];
 }

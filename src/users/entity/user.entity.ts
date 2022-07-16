@@ -1,5 +1,6 @@
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
+import { VoteEntity } from "src/votes/entity/vote.entity";
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 
 @Entity("User")
@@ -27,4 +28,7 @@ export class UserEntity {
 
   @OneToMany((type) => FactcheckEntity, (factcheck) => factcheck.target_user)
   factchecks: FactcheckEntity[];
+
+  @OneToMany((type) => VoteEntity, (vote) => vote.target_user)
+  votes: VoteEntity[];
 }
