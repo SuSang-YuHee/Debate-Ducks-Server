@@ -1,5 +1,6 @@
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
+import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { VoteEntity } from "src/votes/entity/vote.entity";
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 
@@ -31,4 +32,7 @@ export class UserEntity {
 
   @OneToMany((type) => VoteEntity, (vote) => vote.target_user)
   votes: VoteEntity[];
+
+  @OneToMany((type) => HeartEntity, (heart) => heart.target_user)
+  hearts: HeartEntity[];
 }
