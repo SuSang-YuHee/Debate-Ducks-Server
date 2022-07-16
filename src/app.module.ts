@@ -23,6 +23,7 @@ import { DebatesModule } from "./debates/debates.module";
 import { FactchecksModule } from "./factchecks/factchecks.module";
 import { VotesModule } from "./votes/votes.module";
 import { HeartsModule } from './hearts/hearts.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { HeartsModule } from './hearts/hearts.module';
     FactchecksModule,
     VotesModule,
     HeartsModule,
+    CommentsModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
