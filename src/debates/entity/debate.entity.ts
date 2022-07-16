@@ -1,11 +1,11 @@
+import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import {
-  BaseEntity,
   Column,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
-  RelationId,
 } from "typeorm";
 
 @Entity("Debate")
@@ -53,4 +53,7 @@ export class DebateEntity {
     nullable: true,
   })
   ended_date: Date;
+
+  @OneToMany((type) => FactcheckEntity, (factcheck) => factcheck.target_debate)
+  factchecks: FactcheckEntity[];
 }
