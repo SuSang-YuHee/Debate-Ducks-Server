@@ -1,7 +1,7 @@
 export class CreateDebateDto {
   title: string;
 
-  author: string;
+  author_id: string;
 
   author_pros: boolean;
 

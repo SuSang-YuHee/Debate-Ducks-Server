@@ -17,12 +17,12 @@ export class DebatesController {
   constructor(private debatesService: DebatesService) {}
 
   @Post()
-  async createDebate(@Body() dto: CreateDebateDto): Promise<void> {
+  async createDebate(@Body() dto: CreateDebateDto): Promise<number> {
     console.log(dto);
-    const { title, author, author_pros, category, contents } = dto;
-    await this.debatesService.createDebate(
+    const { title, author_id, author_pros, category, contents } = dto;
+    return await this.debatesService.createDebate(
       title,
-      author,
+      author_id,
       author_pros,
       category,
       contents,
@@ -33,6 +33,11 @@ export class DebatesController {
   async getDebateInfo(@Param("id") debateId: number): Promise<DebateInfo> {
     console.log(debateId);
     return this.debatesService.getDebateInfo(debateId);
+  }
+
+  @Get()
+  async getDebates() {
+    return this.debatesService.getDebates();
   }
 
   @Patch()
