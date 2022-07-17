@@ -19,12 +19,18 @@ export class DebatesService {
 
   async createDebate(
     title: string,
-    author: string,
+    author_id: string,
     author_pros: boolean,
     category: string,
     contents: string,
   ) {
-    await this.saveDebate(title, author, author_pros, category, contents);
+    return await this.saveDebate(
+      title,
+      author_id,
+      author_pros,
+      category,
+      contents,
+    );
   }
 
   async deleteDebate(debateId: number) {
@@ -63,19 +69,28 @@ export class DebatesService {
   }
 
   async getDebateInfo(debateId: number): Promise<DebateInfo> {
-    const debate = await this.debateRepository.findOne({ id: debateId });
+    const debate = await this.debateRepository.findOne({
+      where: { id: debateId },
+      relations: ["author", "participant"],
+    });
 
     return debate;
   }
 
+  async getDebates() {
+    const debates = await this.debateRepository.find();
+    // console.log(debates);
+    return debates;
+  }
+
   private async saveDebate(
     title: string,
-    author: string,
+    author_id: string,
     author_pros: boolean,
     category: string,
     contents: string,
   ) {
-    const create_author = await this.userRepository.findOne({ id: author });
+    const create_author = await this.userRepository.findOne({ id: author_id });
     const debate = new DebateEntity();
 
     console.log("Debate 저장 요청을 받았습니다.");
@@ -93,6 +108,6 @@ export class DebatesService {
     console.log("-----------------------------------------------------");
     console.log("create_author : ", create_author);
 
-    await this.debateRepository.save(debate);
+    return (await this.debateRepository.save(debate)).id;
   }
 }
