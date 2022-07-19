@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { response } from "express";
 import { debate } from "src/events/utils";
 import { UserEntity } from "src/users/entity/user.entity";
 import { Repository } from "typeorm";
@@ -40,32 +41,47 @@ export class DebatesService {
   }
 
   async updateDebate(dto: UpdateDebateDto) {
-    const update_author = await this.userRepository.findOne({ id: dto.author });
-    const update_participant = await this.userRepository.findOne({
-      id: dto.participant,
-    });
+    if (!dto.participant_id) {
+      await this.debateRepository.update(
+        {
+          id: dto.id,
+        },
+        {
+          title: dto.title,
+          contents: dto.contents,
+          category: dto.category,
+          video_url: dto.video_url,
+          author_pros: dto.author_pros,
+        },
+      );
+    } else {
+      const debate = await this.debateRepository.findOne({
+        where: {
+          id: dto.id,
+        },
+        relations: ["author", "participant"],
+      });
+      // console.log(debate);
+      // console.log("bool : ", !!debate.participant["id"]);
 
-    console.log("UpdateDebate 요청을 받았습니다.");
-    console.log("-----------------------------------------------------");
-    console.log("update_author : ", update_author);
-    console.log("update_participant : ", update_participant);
+      if (!debate.participant) {
+        const update_participant = await this.userRepository.findOne({
+          id: dto.participant_id,
+        });
 
-    await this.debateRepository.update(
-      {
-        id: dto.id,
-      },
-      {
-        author: update_author,
-        title: dto.title,
-        contents: dto.contents,
-        category: dto.category,
-        participant: update_participant,
-        video_url: dto.video_url,
-        author_pros: dto.author_pros,
-        updated_date: new Date(),
-        ended_date: dto.ended_date,
-      },
-    );
+        await this.debateRepository.update(
+          {
+            id: dto.id,
+          },
+          {
+            participant: update_participant,
+          },
+        );
+      } else {
+        return "이미 참가자가 등록되어 있어서 참가할 수 없습니다.";
+      }
+    }
+    return dto.id;
   }
 
   async getDebateInfo(debateId: number): Promise<DebateInfo> {
@@ -78,7 +94,23 @@ export class DebatesService {
   }
 
   async getDebates() {
-    const debates = await this.debateRepository.find();
+    const order_flag = "ASC";
+    const take_flag = 9;
+    const debates = await this.debateRepository.find({
+      order: {
+        id: order_flag,
+      },
+      take: take_flag,
+      skip: 0,
+      relations: [
+        "author",
+        "participant",
+        "votes",
+        "factchecks",
+        "hearts",
+        "comments",
+      ],
+    });
     // console.log(debates);
     return debates;
   }
