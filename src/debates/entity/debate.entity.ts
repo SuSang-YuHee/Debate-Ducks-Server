@@ -5,10 +5,12 @@ import { UserEntity } from "src/users/entity/user.entity";
 import { VoteEntity } from "src/votes/entity/vote.entity";
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 
 @Entity("Debate")
@@ -42,14 +44,10 @@ export class DebateEntity {
   @Column()
   author_pros: boolean;
 
-  @Column({
-    nullable: true,
-  })
+  @CreateDateColumn()
   created_date: Date;
 
-  @Column({
-    nullable: true,
-  })
+  @UpdateDateColumn()
   updated_date: Date;
 
   @Column({
