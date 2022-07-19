@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import { Response } from "express";
 import { DebateInfo } from "./DebateInfo";
 import { DebatesService } from "./debates.service";
 import { CreateDebateDto } from "./dto/create-debate.dto";
@@ -41,9 +42,8 @@ export class DebatesController {
   }
 
   @Patch()
-  async updateDebateInfo(@Body() dto: UpdateDebateDto): Promise<void> {
-    console.log(dto);
-    await this.debatesService.updateDebate(dto);
+  async updateDebateInfo(@Body() dto: UpdateDebateDto): Promise<any> {
+    return await this.debatesService.updateDebate(dto);
   }
 
   @Delete("/:id")
