@@ -16,17 +16,17 @@ export class HeartsController {
   constructor(private readonly heartsService: HeartsService) {}
 
   @Post()
-  async createHeart(@Body() dto: CreateHeartDto) {
+  async createHeart(@Body() dto: CreateHeartDto): Promise<number> {
     return this.heartsService.createHeart(dto);
   }
 
   @Get()
-  async isHeart(@Query() query) {
+  async isHeart(@Query() query): Promise<boolean> {
     return this.heartsService.isHeart(query);
   }
 
-  @Delete(":id")
-  async deleteHeart(@Param("id") id: number) {
-    return this.heartsService.deleteHeart(id);
+  @Delete()
+  async deleteHeart(@Body() dto: CreateHeartDto): Promise<number> {
+    return this.heartsService.deleteHeart(dto);
   }
 }
