@@ -100,6 +100,11 @@ export class DebatesService {
       where: {
         title: Like(`%${dto.title}%`),
       },
+      order: {
+        id: order_flag,
+      },
+      take: take_flag,
+      skip: skip_flag,
     });
 
     return searchDebates;

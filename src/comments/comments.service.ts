@@ -61,4 +61,34 @@ export class CommentsService {
     const comment = await this.commentRepository.findOne({ id: id });
     return comment;
   }
+
+  async getCommentsWithUserId(id: string, order: "ASC" | "DESC") {
+    const order_flag = order["order"] || "ASC";
+    const result = await this.commentRepository.find({
+      where: {
+        target_user: id,
+      },
+      order: {
+        id: order_flag,
+      },
+      relations: ["target_user", "target_debate"],
+    });
+
+    return result;
+  }
+
+  async getCommentsWithDebateId(id: number, order: "ASC" | "DESC") {
+    const order_flag = order["order"] || "ASC";
+    const result = await this.commentRepository.find({
+      where: {
+        target_debate: id,
+      },
+      order: {
+        id: order_flag,
+      },
+      relations: ["target_user", "target_debate"],
+    });
+
+    return result;
+  }
 }

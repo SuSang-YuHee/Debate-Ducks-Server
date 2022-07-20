@@ -1,6 +1,13 @@
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
 @Entity("Comment")
 export class CommentEntity {
@@ -13,15 +20,17 @@ export class CommentEntity {
   @ManyToOne((type) => DebateEntity, (target_debate) => target_debate.comments)
   target_debate: DebateEntity;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   pros: boolean;
 
   @Column()
   contents: string;
 
-  @Column()
+  @CreateDateColumn()
   created_date: Date;
 
-  @Column()
+  @UpdateDateColumn()
   updated_date: Date;
 }
