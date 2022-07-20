@@ -18,12 +18,12 @@ export class FactchecksService {
     private debateRepository: Repository<DebateEntity>,
   ) {}
 
-  async createFactcheck(dto: CreateFactcheckDto) {
+  async createFactcheck(dto: CreateFactcheckDto): Promise<number> {
     const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
+      id: dto.target_user_id,
     });
     const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
+      id: dto.target_debate_id,
     });
     const factcheck = new FactcheckEntity();
 
@@ -34,13 +34,29 @@ export class FactchecksService {
     factcheck.reference_url = dto.reference_url;
 
     await this.factcheckRepository.save(factcheck);
+    return dto.target_debate_id;
   }
 
-  async deleteFactcheck(factcheckId: number) {
+  async deleteFactcheck(factcheckId: number): Promise<number> {
+    const data = await this.factcheckRepository.findOne({
+      where: {
+        id: factcheckId,
+      },
+      relations: ["target_debate"],
+    });
+    const result = data.target_debate.id;
     await this.factcheckRepository.delete({ id: factcheckId });
+    return result;
   }
 
-  async updateFactcheck(dto: UpdateFactcheckDto) {
+  async updateFactcheck(dto: UpdateFactcheckDto): Promise<number> {
+    const data = await this.factcheckRepository.findOne({
+      where: {
+        id: dto.id,
+      },
+      relations: ["target_debate"],
+    });
+    const result = data.target_debate.id;
     await this.factcheckRepository.update(
       {
         id: dto.id,
@@ -50,5 +66,6 @@ export class FactchecksService {
         reference_url: dto.reference_url,
       },
     );
+    return result;
   }
 }
