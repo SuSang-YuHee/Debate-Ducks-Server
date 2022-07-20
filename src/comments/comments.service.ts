@@ -36,17 +36,9 @@ export class CommentsService {
   }
 
   async updateComment(dto: UpdateCommentDto) {
-    const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
-    });
-    const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
-    });
     await this.commentRepository.update(
       { id: dto.id },
       {
-        target_user: target_user,
-        target_debate: target_debate,
         pros: dto.pros,
         contents: dto.contents,
       },
@@ -62,8 +54,10 @@ export class CommentsService {
     return comment;
   }
 
-  async getCommentsWithUserId(id: string, order: "ASC" | "DESC") {
-    const order_flag = order["order"] || "ASC";
+  async getCommentsWithUserId(id: string, query) {
+    const take_flag = 10;
+    const skip_flag = take_flag * query.page;
+    const order_flag = query.order;
     const result = await this.commentRepository.find({
       where: {
         target_user: id,
@@ -71,14 +65,18 @@ export class CommentsService {
       order: {
         id: order_flag,
       },
+      take: take_flag,
+      skip: skip_flag,
       relations: ["target_user", "target_debate"],
     });
 
     return result;
   }
 
-  async getCommentsWithDebateId(id: number, order: "ASC" | "DESC") {
-    const order_flag = order["order"] || "ASC";
+  async getCommentsWithDebateId(id: number, query) {
+    const take_flag = 10;
+    const skip_flag = take_flag * query.page;
+    const order_flag = query.order;
     const result = await this.commentRepository.find({
       where: {
         target_debate: id,
@@ -86,6 +84,8 @@ export class CommentsService {
       order: {
         id: order_flag,
       },
+      take: take_flag,
+      skip: skip_flag,
       relations: ["target_user", "target_debate"],
     });
 
