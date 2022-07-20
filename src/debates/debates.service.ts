@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { response } from "express";
-import { debate } from "src/events/utils";
 import { UserEntity } from "src/users/entity/user.entity";
-import { Repository } from "typeorm";
+import { In, Like, Repository } from "typeorm";
 import { DebateInfo } from "./DebateInfo";
+import { GetDebatesDto } from "./dto/get-debates-forum.dto";
+import { SearchDebatesDto } from "./dto/search-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 import { DebateEntity } from "./entity/debate.entity";
 
@@ -61,8 +61,6 @@ export class DebatesService {
         },
         relations: ["author", "participant"],
       });
-      // console.log(debate);
-      // console.log("bool : ", !!debate.participant["id"]);
 
       if (!debate.participant) {
         const update_participant = await this.userRepository.findOne({
@@ -93,26 +91,65 @@ export class DebatesService {
     return debate;
   }
 
-  async getDebates() {
+  async searchDebates(dto: SearchDebatesDto) {
     const order_flag = "ASC";
     const take_flag = 9;
-    const debates = await this.debateRepository.find({
-      order: {
-        id: order_flag,
+    const skip_flag = take_flag * 0;
+
+    const searchDebates = await this.debateRepository.find({
+      where: {
+        title: Like(`%${dto.title}%`),
       },
-      take: take_flag,
-      skip: 0,
-      relations: [
-        "author",
-        "participant",
-        "votes",
-        "factchecks",
-        "hearts",
-        "comments",
-      ],
     });
-    // console.log(debates);
-    return debates;
+
+    return searchDebates;
+  }
+
+  async getDebates(dto: GetDebatesDto) {
+    const order_flag = dto.order || "ASC";
+    const take_flag = dto.count || 9;
+    const skip_flag = take_flag * dto.page || take_flag * 0;
+
+    if (!dto.category) {
+      const debates = await this.debateRepository.find({
+        order: {
+          id: order_flag,
+        },
+        take: take_flag,
+        skip: skip_flag,
+        relations: [
+          "author",
+          "participant",
+          "votes",
+          "factchecks",
+          "hearts",
+          "comments",
+        ],
+      });
+
+      return debates;
+    } else {
+      const debates = await this.debateRepository.find({
+        where: {
+          category: In(dto.category),
+        },
+        order: {
+          id: order_flag,
+        },
+        take: take_flag,
+        skip: skip_flag,
+        relations: [
+          "author",
+          "participant",
+          "votes",
+          "factchecks",
+          "hearts",
+          "comments",
+        ],
+      });
+
+      return debates;
+    }
   }
 
   private async saveDebate(
@@ -125,20 +162,12 @@ export class DebatesService {
     const create_author = await this.userRepository.findOne({ id: author_id });
     const debate = new DebateEntity();
 
-    console.log("Debate 저장 요청을 받았습니다.");
-    console.log("-----------------------------------------------------");
-    console.log("create_author : ", create_author);
-
     debate.title = title;
     debate.author = create_author;
     debate.author_pros = author_pros;
     debate.category = category;
     debate.contents = contents;
     debate.created_date = new Date();
-
-    console.log("Debate 저장 요청을 받았습니다.");
-    console.log("-----------------------------------------------------");
-    console.log("create_author : ", create_author);
 
     return (await this.debateRepository.save(debate)).id;
   }
