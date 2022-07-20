@@ -11,6 +11,8 @@ import { Response } from "express";
 import { DebateInfo } from "./DebateInfo";
 import { DebatesService } from "./debates.service";
 import { CreateDebateDto } from "./dto/create-debate.dto";
+import { GetDebatesDto } from "./dto/get-debates-forum.dto";
+import { SearchDebatesDto } from "./dto/search-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 
 @Controller("debates")
@@ -19,7 +21,6 @@ export class DebatesController {
 
   @Post()
   async createDebate(@Body() dto: CreateDebateDto): Promise<number> {
-    console.log(dto);
     const { title, author_id, author_pros, category, contents } = dto;
     return await this.debatesService.createDebate(
       title,
@@ -30,6 +31,12 @@ export class DebatesController {
     );
   }
 
+  @Get("/search")
+  async searchDebates(@Body() dto: SearchDebatesDto) {
+    console.log("title : ", dto.title);
+    return this.debatesService.searchDebates(dto);
+  }
+
   @Get("/:id")
   async getDebateInfo(@Param("id") debateId: number): Promise<DebateInfo> {
     console.log(debateId);
@@ -37,8 +44,8 @@ export class DebatesController {
   }
 
   @Get()
-  async getDebates() {
-    return this.debatesService.getDebates();
+  async getDebates(@Body() dto: GetDebatesDto) {
+    return this.debatesService.getDebates(dto);
   }
 
   @Patch()
