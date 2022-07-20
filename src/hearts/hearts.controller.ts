@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from "@nestjs/common";
 import { HeartsService } from "./hearts.service";
 import { CreateHeartDto } from "./dto/create-heart.dto";
@@ -19,14 +20,9 @@ export class HeartsController {
     return this.heartsService.createHeart(dto);
   }
 
-  @Get("/isheart")
-  async isHeart(@Body() dto: CreateHeartDto) {
-    return this.heartsService.isHeart(dto);
-  }
-
-  @Get(":id")
-  async getHeart(@Param("id") id: number) {
-    return this.heartsService.getHeart(id);
+  @Get()
+  async isHeart(@Query() query) {
+    return this.heartsService.isHeart(query);
   }
 
   @Delete(":id")
