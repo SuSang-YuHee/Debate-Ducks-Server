@@ -18,12 +18,12 @@ export class CommentsService {
     private debateRepository: Repository<DebateEntity>,
   ) {}
 
-  async createComment(dto: CreateCommentDto) {
+  async createComment(dto: CreateCommentDto): Promise<number> {
     const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
+      id: dto.target_user_id,
     });
     const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
+      id: dto.target_debate_id,
     });
     const comment = new CommentEntity();
 
@@ -33,9 +33,20 @@ export class CommentsService {
     comment.contents = dto.contents;
 
     await this.commentRepository.save(comment);
+
+    return dto.target_debate_id;
   }
 
-  async updateComment(dto: UpdateCommentDto) {
+  async updateComment(dto: UpdateCommentDto): Promise<number> {
+    const data = await this.commentRepository.findOne({
+      where: {
+        id: dto.id,
+      },
+      relations: ["target_debate"],
+    });
+
+    const result = data.target_debate.id;
+
     await this.commentRepository.update(
       { id: dto.id },
       {
@@ -43,15 +54,23 @@ export class CommentsService {
         contents: dto.contents,
       },
     );
+
+    return result;
   }
 
-  async deleteComment(id: number) {
+  async deleteComment(id: number): Promise<number> {
+    const data = await this.commentRepository.findOne({
+      where: {
+        id: id,
+      },
+      relations: ["target_debate"],
+    });
+
+    const result = data.target_debate.id;
+
     await this.commentRepository.delete({ id: id });
-  }
 
-  async getComment(id: number) {
-    const comment = await this.commentRepository.findOne({ id: id });
-    return comment;
+    return result;
   }
 
   async getCommentsWithUserId(id: string, query) {

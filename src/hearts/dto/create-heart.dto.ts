@@ -1,4 +1,4 @@
 export class CreateHeartDto {
-  target_user: string;
-  target_debate: number;
+  target_user_id: string;
+  target_debate_id: number;
 }

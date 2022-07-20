@@ -17,22 +17,49 @@ export class HeartsService {
     private debateRepository: Repository<DebateEntity>,
   ) {}
 
-  async createHeart(dto: CreateHeartDto) {
-    console.log(dto);
+  async createHeart(dto: CreateHeartDto): Promise<number> {
     const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
+      id: dto.target_user_id,
     });
     const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
+      id: dto.target_debate_id,
     });
-    const heart = new HeartEntity();
-    heart.target_user = target_user;
-    heart.target_debate = target_debate;
-    await this.heartRepository.save(heart);
+
+    const exist = await this.heartRepository.findOne({
+      where: {
+        target_debate: target_debate,
+        target_user: target_user,
+      },
+      relations: ["target_debate", "target_user"],
+    });
+
+    if (!exist) {
+      const heart = new HeartEntity();
+      heart.target_user = target_user;
+      heart.target_debate = target_debate;
+      await this.heartRepository.save(heart);
+      return dto.target_debate_id;
+    } else {
+      console.log("좋아요는 토론에 한번만 요청할 수 있어요 :)");
+      return dto.target_debate_id;
+    }
   }
 
-  async deleteHeart(id: number) {
+  async deleteHeart(dto: CreateHeartDto): Promise<number> {
+    const heart = await this.heartRepository.findOne({
+      where: {
+        target_debate: dto.target_debate_id,
+        target_user: dto.target_user_id,
+      },
+      relations: ["target_debate", "target_user"],
+    });
+
+    const id = heart.id;
+    const result = heart.target_debate.id;
+
     await this.heartRepository.delete({ id: id });
+
+    return result;
   }
 
   async isHeart(query) {
