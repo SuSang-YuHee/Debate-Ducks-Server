@@ -85,7 +85,7 @@ export class DebatesService {
   async getDebateInfo(debateId: number): Promise<DebateInfo> {
     const debate = await this.debateRepository.findOne({
       where: { id: debateId },
-      relations: ["author", "participant"],
+      relations: ["author", "participant", "factchecks"],
     });
 
     return debate;

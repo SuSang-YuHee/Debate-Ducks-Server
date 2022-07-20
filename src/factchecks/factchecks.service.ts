@@ -6,7 +6,6 @@ import { Repository } from "typeorm";
 import { CreateFactcheckDto } from "./dto/create-factcheck.dto";
 import { UpdateFactcheckDto } from "./dto/update-factcheck.dto";
 import { FactcheckEntity } from "./entity/factcheck.entity";
-import { FactcheckInfo } from "./FactcheckInfo";
 
 @Injectable()
 export class FactchecksService {
@@ -20,7 +19,6 @@ export class FactchecksService {
   ) {}
 
   async createFactcheck(dto: CreateFactcheckDto) {
-    console.log("factcheck-service, create-fc dto : ", dto);
     const target_user = await this.userRepository.findOne({
       id: dto.target_user,
     });
@@ -43,31 +41,14 @@ export class FactchecksService {
   }
 
   async updateFactcheck(dto: UpdateFactcheckDto) {
-    const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
-    });
-    const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
-    });
-
     await this.factcheckRepository.update(
       {
         id: dto.id,
       },
       {
-        target_user: target_user,
-        target_debate: target_debate,
-        pros: dto.pros,
         description: dto.description,
         reference_url: dto.reference_url,
       },
     );
-  }
-
-  async getFactcheck(factcheckId: number): Promise<FactcheckInfo> {
-    const factcheck = await this.factcheckRepository.findOne({
-      id: factcheckId,
-    });
-    return factcheck;
   }
 }
