@@ -15,8 +15,13 @@ export class HeartsController {
   constructor(private readonly heartsService: HeartsService) {}
 
   @Post()
-  createHeart(@Body() dto: CreateHeartDto) {
+  async createHeart(@Body() dto: CreateHeartDto) {
     return this.heartsService.createHeart(dto);
+  }
+
+  @Get("/isheart")
+  async isHeart(@Body() dto: CreateHeartDto) {
+    return this.heartsService.isHeart(dto);
   }
 
   @Get(":id")
