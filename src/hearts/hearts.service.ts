@@ -39,4 +39,11 @@ export class HeartsService {
   async deleteHeart(id: number) {
     await this.heartRepository.delete({ id: id });
   }
+
+  async isHeart(dto: CreateHeartDto) {
+    const heart = await this.heartRepository.findOne({
+      where: { target_user: dto.target_user, target_debate: dto.target_debate },
+    });
+    return !!heart;
+  }
 }
