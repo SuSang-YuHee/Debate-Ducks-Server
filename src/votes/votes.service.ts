@@ -4,9 +4,7 @@ import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { Repository } from "typeorm";
 import { CreateVoteDto } from "./dto/create-vote.dto";
-import { UpdateVoteDto } from "./dto/update-vote.dto";
 import { VoteEntity } from "./entity/vote.entity";
-import { VoteInfo } from "./VoteInfo";
 
 @Injectable()
 export class VotesService {
@@ -20,49 +18,71 @@ export class VotesService {
   ) {}
 
   async createVote(dto: CreateVoteDto) {
-    console.log(dto);
     const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
+      id: dto.target_user_id,
     });
     const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
+      id: dto.target_debate_id,
     });
-    const vote = new VoteEntity();
-    vote.target_user = target_user;
-    vote.target_debate = target_debate;
-    vote.pros = dto.pros;
 
-    await this.voteRepository.save(vote);
+    const exist = await this.voteRepository.findOne({
+      where: {
+        target_user: target_user,
+        target_debate: target_debate,
+      },
+    });
+
+    if (!exist) {
+      const vote = new VoteEntity();
+      vote.target_user = target_user;
+      vote.target_debate = target_debate;
+      vote.pros = dto.pros;
+
+      await this.voteRepository.save(vote);
+    } else {
+      return "이미 해당 토론에 투표를 하셨습니다.";
+    }
   }
 
-  async getVote(voteId: number): Promise<VoteInfo> {
-    const vote = await this.voteRepository.findOne({ id: voteId });
-    const vote_obj = {
-      id: vote.id,
-      pros: vote.pros,
-    };
-    return vote_obj;
+  async getVote(debateId: number) {
+    const pros_count = await this.voteRepository.count({
+      where: {
+        target_debate: debateId,
+        pros: true,
+      },
+    });
+    const cons_count = await this.voteRepository.count({
+      where: {
+        target_debate: debateId,
+        pros: false,
+      },
+    });
+    return { pros_count, cons_count };
   }
 
-  async updateVote(dto: UpdateVoteDto) {
+  async updateVote(dto: CreateVoteDto) {
     const target_user = await this.userRepository.findOne({
-      id: dto.target_user,
+      id: dto.target_user_id,
     });
     const target_debate = await this.debateRepository.findOne({
-      id: dto.target_debate,
+      id: dto.target_debate_id,
     });
 
     await this.voteRepository.update(
-      { id: dto.id },
+      { target_user: target_user, target_debate: target_debate },
       {
-        target_user: target_user,
-        target_debate: target_debate,
         pros: dto.pros,
       },
     );
   }
 
   async deleteVote(voteId: number) {
+    const vote = await this.voteRepository.findOne({
+      where: { id: voteId },
+      relations: ["target_debate"],
+    });
+    const result = vote.target_debate.id;
     await this.voteRepository.delete({ id: voteId });
+    return result;
   }
 }
