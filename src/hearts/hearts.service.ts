@@ -31,18 +31,16 @@ export class HeartsService {
     await this.heartRepository.save(heart);
   }
 
-  async getHeart(heartId: number) {
-    const heart = await this.heartRepository.findOne({ id: heartId });
-    return heart;
-  }
-
   async deleteHeart(id: number) {
     await this.heartRepository.delete({ id: id });
   }
 
-  async isHeart(dto: CreateHeartDto) {
+  async isHeart(query) {
     const heart = await this.heartRepository.findOne({
-      where: { target_user: dto.target_user, target_debate: dto.target_debate },
+      where: {
+        target_user: query.targetUser,
+        target_debate: query.targetDebate,
+      },
     });
     return !!heart;
   }
