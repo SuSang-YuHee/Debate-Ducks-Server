@@ -128,7 +128,7 @@ export class DebatesService {
 
       const result = {
         ...debate,
-        haert: { isHeart: bool_heart, heartCnt: heartCnt },
+        heart: { isHeart: bool_heart, heartCnt: heartCnt },
         vote: { prosCnt: prosCnt, consCnt: consCnt },
       };
       return result;
@@ -171,7 +171,7 @@ export class DebatesService {
       }
       const result = {
         ...debate,
-        haert: { isHeart: bool_heart, heartCnt: heartCnt },
+        heart: { isHeart: bool_heart, heartCnt: heartCnt },
         vote: { prosCnt: prosCnt, consCnt: consCnt },
       };
       return result;
