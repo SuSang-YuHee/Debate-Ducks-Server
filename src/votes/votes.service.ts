@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -40,7 +40,7 @@ export class VotesService {
 
       await this.voteRepository.save(vote);
     } else {
-      return "이미 해당 토론에 투표를 하셨습니다.";
+      throw new HttpException("Already Exist", HttpStatus.BAD_REQUEST);
     }
   }
 

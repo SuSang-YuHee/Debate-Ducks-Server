@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   Param,
   Patch,
   Post,
@@ -16,7 +17,7 @@ export class VotesController {
   constructor(private votesService: VotesService) {}
 
   @Post()
-  async createVote(@Body() dto: CreateVoteDto): Promise<string> {
+  async createVote(@Body() dto: CreateVoteDto): Promise<void> {
     return await this.votesService.createVote(dto);
   }
 
