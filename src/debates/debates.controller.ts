@@ -42,7 +42,7 @@ export class DebatesController {
   async getDebateInfo(
     @Param("id") debateId: number,
     @Query() query,
-  ): Promise<DebateInfo> {
+  ): Promise<DebateInfo | string> {
     return this.debatesService.getDebateInfo(debateId, query);
   }
 

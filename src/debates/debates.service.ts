@@ -98,7 +98,10 @@ export class DebatesService {
     return dto.id;
   }
 
-  async getDebateInfo(debateId: number, query): Promise<DebateInfo> {
+  async getDebateInfo(
+    debateId: number,
+    query: { userId },
+  ): Promise<DebateInfo | string> {
     if (!query.userId) {
       const prosCnt = await this.voteRepository.count({
         where: {
@@ -125,13 +128,16 @@ export class DebatesService {
         where: { id: debateId },
         relations: ["author", "participant", "factchecks"],
       });
-
-      const result = {
-        ...debate,
-        heart: { isHeart: bool_heart, heartCnt: heartCnt },
-        vote: { prosCnt: prosCnt, consCnt: consCnt },
-      };
-      return result;
+      if (!debate) {
+        return "해당 id의 토론은 존재하지 않습니다";
+      } else {
+        const result = {
+          ...debate,
+          heart: { isHeart: bool_heart, heartCnt: heartCnt },
+          vote: { prosCnt: prosCnt, consCnt: consCnt },
+        };
+        return result;
+      }
     } else {
       const userId = query.userId;
       const prosCnt = await this.voteRepository.count({
@@ -166,15 +172,19 @@ export class DebatesService {
         where: { id: debateId },
         relations: ["author", "participant", "factchecks"],
       });
-      if (!!heart) {
-        bool_heart = true;
+      if (!debate) {
+        return "해당 id의 토론은 존재하지 않습니다.";
+      } else {
+        if (!!heart) {
+          bool_heart = true;
+        }
+        const result = {
+          ...debate,
+          heart: { isHeart: bool_heart, heartCnt: heartCnt },
+          vote: { prosCnt: prosCnt, consCnt: consCnt },
+        };
+        return result;
       }
-      const result = {
-        ...debate,
-        heart: { isHeart: bool_heart, heartCnt: heartCnt },
-        vote: { prosCnt: prosCnt, consCnt: consCnt },
-      };
-      return result;
     }
   }
 
