@@ -1,6 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { debate } from "src/events/utils";
+import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
+import { VoteEntity } from "src/votes/entity/vote.entity";
 import { In, Like, Repository } from "typeorm";
 import { DebateInfo } from "./DebateInfo";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
@@ -16,6 +19,12 @@ export class DebatesService {
 
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+
+    @InjectRepository(HeartEntity)
+    private heartRepository: Repository<HeartEntity>,
+
+    @InjectRepository(VoteEntity)
+    private voteRepository: Repository<VoteEntity>,
   ) {}
 
   async createDebate(
@@ -55,6 +64,9 @@ export class DebatesService {
         },
       );
     } else {
+      const participant = await this.userRepository.findOne({
+        id: dto.participant_id,
+      });
       const debate = await this.debateRepository.findOne({
         where: {
           id: dto.id,
@@ -63,18 +75,22 @@ export class DebatesService {
       });
 
       if (!debate.participant) {
-        const update_participant = await this.userRepository.findOne({
-          id: dto.participant_id,
-        });
+        if (debate.author.id !== participant.id) {
+          const update_participant = await this.userRepository.findOne({
+            id: dto.participant_id,
+          });
 
-        await this.debateRepository.update(
-          {
-            id: dto.id,
-          },
-          {
-            participant: update_participant,
-          },
-        );
+          await this.debateRepository.update(
+            {
+              id: dto.id,
+            },
+            {
+              participant: update_participant,
+            },
+          );
+        } else {
+          return "이미 참가자로 등록되어 있어 참가할 수 없습니다.";
+        }
       } else {
         return "이미 참가자가 등록되어 있어서 참가할 수 없습니다.";
       }
@@ -82,13 +98,84 @@ export class DebatesService {
     return dto.id;
   }
 
-  async getDebateInfo(debateId: number): Promise<DebateInfo> {
-    const debate = await this.debateRepository.findOne({
-      where: { id: debateId },
-      relations: ["author", "participant", "factchecks"],
-    });
+  async getDebateInfo(debateId: number, query): Promise<DebateInfo> {
+    if (!query.userId) {
+      const prosCnt = await this.voteRepository.count({
+        where: {
+          pros: true,
+          target_debate: debateId,
+        },
+        relations: ["target_debate"],
+      });
+      const consCnt = await this.voteRepository.count({
+        where: {
+          pros: false,
+          target_debate: debateId,
+        },
+        relations: ["target_debate"],
+      });
+      let bool_heart = false;
+      const heartCnt = await this.heartRepository.count({
+        where: {
+          target_debate: debateId,
+        },
+        relations: ["target_debate"],
+      });
+      const debate = await this.debateRepository.findOne({
+        where: { id: debateId },
+        relations: ["author", "participant", "factchecks"],
+      });
 
-    return debate;
+      const result = {
+        ...debate,
+        haert: { isHeart: bool_heart, heartCnt: heartCnt },
+        vote: { prosCnt: prosCnt, consCnt: consCnt },
+      };
+      return result;
+    } else {
+      const userId = query.userId;
+      const prosCnt = await this.voteRepository.count({
+        where: {
+          pros: true,
+          target_debate: debateId,
+        },
+        relations: ["target_debate"],
+      });
+      const consCnt = await this.voteRepository.count({
+        where: {
+          pros: false,
+          target_debate: debateId,
+        },
+        relations: ["target_debate"],
+      });
+      let bool_heart = false;
+      const heartCnt = await this.heartRepository.count({
+        where: {
+          target_debate: debateId,
+        },
+        relations: ["target_debate"],
+      });
+      const heart = await this.heartRepository.findOne({
+        where: {
+          target_user: userId,
+          target_debate: debateId,
+        },
+        relations: ["target_user", "target_debate"],
+      });
+      const debate = await this.debateRepository.findOne({
+        where: { id: debateId },
+        relations: ["author", "participant", "factchecks"],
+      });
+      if (!!heart) {
+        bool_heart = true;
+      }
+      const result = {
+        ...debate,
+        haert: { isHeart: bool_heart, heartCnt: heartCnt },
+        vote: { prosCnt: prosCnt, consCnt: consCnt },
+      };
+      return result;
+    }
   }
 
   async searchDebates(dto: SearchDebatesDto) {

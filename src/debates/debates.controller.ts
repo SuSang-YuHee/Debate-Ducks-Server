@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { Response } from "express";
 import { DebateInfo } from "./DebateInfo";
@@ -38,9 +39,11 @@ export class DebatesController {
   }
 
   @Get("/:id")
-  async getDebateInfo(@Param("id") debateId: number): Promise<DebateInfo> {
-    console.log(debateId);
-    return this.debatesService.getDebateInfo(debateId);
+  async getDebateInfo(
+    @Param("id") debateId: number,
+    @Query() query,
+  ): Promise<DebateInfo> {
+    return this.debatesService.getDebateInfo(debateId, query);
   }
 
   @Get()
