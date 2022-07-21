@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { debate } from "src/events/utils";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
@@ -89,10 +89,10 @@ export class DebatesService {
             },
           );
         } else {
-          return "이미 참가자로 등록되어 있어 참가할 수 없습니다.";
+          throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
         }
       } else {
-        return "이미 참가자가 등록되어 있어서 참가할 수 없습니다.";
+        throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
       }
     }
     return dto.id;
@@ -129,7 +129,7 @@ export class DebatesService {
         relations: ["author", "participant", "factchecks"],
       });
       if (!debate) {
-        return "해당 id의 토론은 존재하지 않습니다";
+        throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
       } else {
         const result = {
           ...debate,
@@ -173,7 +173,7 @@ export class DebatesService {
         relations: ["author", "participant", "factchecks"],
       });
       if (!debate) {
-        return "해당 id의 토론은 존재하지 않습니다.";
+        throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
       } else {
         if (!!heart) {
           bool_heart = true;

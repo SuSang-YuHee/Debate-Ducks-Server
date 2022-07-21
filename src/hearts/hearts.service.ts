@@ -40,7 +40,6 @@ export class HeartsService {
       await this.heartRepository.save(heart);
       return dto.target_debate_id;
     } else {
-      console.log("좋아요는 토론에 한번만 요청할 수 있어요 :)");
       return dto.target_debate_id;
     }
   }
