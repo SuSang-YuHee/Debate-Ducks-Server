@@ -128,16 +128,14 @@ export class DebatesService {
         where: { id: debateId },
         relations: ["author", "participant", "factchecks"],
       });
-      if (!debate) {
-        return "해당 id의 토론은 존재하지 않습니다";
-      } else {
-        const result = {
-          ...debate,
-          haert: { isHeart: bool_heart, heartCnt: heartCnt },
-          vote: { prosCnt: prosCnt, consCnt: consCnt },
-        };
-        return result;
-      }
+
+      const result = {
+        ...debate,
+        heart: { isHeart: bool_heart, heartCnt: heartCnt },
+        vote: { prosCnt: prosCnt, consCnt: consCnt },
+      };
+      return result;
+
     } else {
       const userId = query.userId;
       const prosCnt = await this.voteRepository.count({
@@ -178,13 +176,13 @@ export class DebatesService {
         if (!!heart) {
           bool_heart = true;
         }
-        const result = {
-          ...debate,
-          haert: { isHeart: bool_heart, heartCnt: heartCnt },
-          vote: { prosCnt: prosCnt, consCnt: consCnt },
-        };
-        return result;
-      }
+
+      const result = {
+        ...debate,
+        heart: { isHeart: bool_heart, heartCnt: heartCnt },
+        vote: { prosCnt: prosCnt, consCnt: consCnt },
+      };
+      return result;
     }
   }
 
