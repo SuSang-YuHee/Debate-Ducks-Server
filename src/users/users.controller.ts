@@ -76,7 +76,10 @@ export class UsersController {
   // async kakaoLogin() {}
 
   @Get("image")
-  getImage(@Query() query, @Res() res): Observable<Object> {
+  getImage(
+    @Query() query: { user: string },
+    @Res() res: any,
+  ): Observable<Object> {
     const userId = query.user;
     return this.usersService.getImage(userId).pipe(
       switchMap((imageName: string) => {
@@ -120,7 +123,10 @@ export class UsersController {
   }
 
   @Patch("/:id")
-  async updateNickName(@Param("id") userId: string, @Body() body) {
+  async updateNickName(
+    @Param("id") userId: string,
+    @Body() body: { nickname: string },
+  ) {
     await this.usersService.updateNickName(userId, body);
   }
 
