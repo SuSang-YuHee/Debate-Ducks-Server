@@ -98,93 +98,40 @@ export class DebatesService {
     return dto.id;
   }
 
-  async getDebateInfo(
-    debateId: number,
-    query: { userId },
-  ): Promise<DebateInfo | string> {
-    if (!query.userId) {
-      const prosCnt = await this.voteRepository.count({
-        where: {
-          pros: true,
-          target_debate: debateId,
-        },
-        relations: ["target_debate"],
-      });
-      const consCnt = await this.voteRepository.count({
-        where: {
-          pros: false,
-          target_debate: debateId,
-        },
-        relations: ["target_debate"],
-      });
-      let bool_heart = false;
-      const heartCnt = await this.heartRepository.count({
-        where: {
-          target_debate: debateId,
-        },
-        relations: ["target_debate"],
-      });
-      const debate = await this.debateRepository.findOne({
-        where: { id: debateId },
-        relations: ["author", "participant", "factchecks"],
-      });
-      if (!debate) {
-        throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
-      } else {
-        const result = {
-          ...debate,
-          heart: { isHeart: bool_heart, heartCnt: heartCnt },
-          vote: { prosCnt: prosCnt, consCnt: consCnt },
-        };
-        return result;
-      }
+  async getDebateInfo(debateId: number): Promise<DebateInfo> {
+    const prosCnt = await this.voteRepository.count({
+      where: {
+        pros: true,
+        target_debate: debateId,
+      },
+      relations: ["target_debate"],
+    });
+    const consCnt = await this.voteRepository.count({
+      where: {
+        pros: false,
+        target_debate: debateId,
+      },
+      relations: ["target_debate"],
+    });
+    const heartCnt = await this.heartRepository.count({
+      where: {
+        target_debate: debateId,
+      },
+      relations: ["target_debate"],
+    });
+    const debate = await this.debateRepository.findOne({
+      where: { id: debateId },
+      relations: ["author", "participant", "factchecks"],
+    });
+    if (!debate) {
+      throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
     } else {
-      const userId = query.userId;
-      const prosCnt = await this.voteRepository.count({
-        where: {
-          pros: true,
-          target_debate: debateId,
-        },
-        relations: ["target_debate"],
-      });
-      const consCnt = await this.voteRepository.count({
-        where: {
-          pros: false,
-          target_debate: debateId,
-        },
-        relations: ["target_debate"],
-      });
-      let bool_heart = false;
-      const heartCnt = await this.heartRepository.count({
-        where: {
-          target_debate: debateId,
-        },
-        relations: ["target_debate"],
-      });
-      const heart = await this.heartRepository.findOne({
-        where: {
-          target_user: userId,
-          target_debate: debateId,
-        },
-        relations: ["target_user", "target_debate"],
-      });
-      const debate = await this.debateRepository.findOne({
-        where: { id: debateId },
-        relations: ["author", "participant", "factchecks"],
-      });
-      if (!debate) {
-        throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
-      } else {
-        if (!!heart) {
-          bool_heart = true;
-        }
-        const result = {
-          ...debate,
-          heart: { isHeart: bool_heart, heartCnt: heartCnt },
-          vote: { prosCnt: prosCnt, consCnt: consCnt },
-        };
-        return result;
-      }
+      const result = {
+        ...debate,
+        heartCnt,
+        vote: { prosCnt: prosCnt, consCnt: consCnt },
+      };
+      return result;
     }
   }
 

@@ -33,21 +33,17 @@ export class DebatesController {
   }
 
   @Get("/search")
-  async searchDebates(@Body() dto: SearchDebatesDto) {
-    console.log("title : ", dto.title);
+  async searchDebates(@Query() dto: SearchDebatesDto) {
     return this.debatesService.searchDebates(dto);
   }
 
   @Get("/:id")
-  async getDebateInfo(
-    @Param("id") debateId: number,
-    @Query() query,
-  ): Promise<DebateInfo | string> {
-    return this.debatesService.getDebateInfo(debateId, query);
+  async getDebateInfo(@Param("id") debateId: number): Promise<DebateInfo> {
+    return this.debatesService.getDebateInfo(debateId);
   }
 
   @Get()
-  async getDebates(@Body() dto: GetDebatesDto) {
+  async getDebates(@Query() dto: GetDebatesDto) {
     return this.debatesService.getDebates(dto);
   }
 
@@ -58,7 +54,6 @@ export class DebatesController {
 
   @Delete("/:id")
   async deleteDebate(@Param("id") debateId: number): Promise<void> {
-    console.log(debateId);
     await this.debatesService.deleteDebate(debateId);
   }
 }
