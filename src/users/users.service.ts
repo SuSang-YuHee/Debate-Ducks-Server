@@ -12,6 +12,8 @@ import { UserEntity } from "./entity/user.entity";
 import { ulid } from "ulid";
 import { AuthService } from "src/auth/auth.service";
 import { from, map, Observable } from "rxjs";
+import { DebateEntity } from "src/debates/entity/debate.entity";
+import { CommentEntity } from "src/comments/entities/comment.entity";
 
 @Injectable()
 export class UsersService {
@@ -166,9 +168,6 @@ export class UsersService {
       name: user.nickname,
       email: user.email,
       profile_image: user.profile_image,
-      debates: user.debates,
-      participant_debates: user.participant_debates,
-      comments: user.comments,
     };
   }
 
@@ -192,5 +191,29 @@ export class UsersService {
         return user.profile_image;
       }),
     );
+  }
+
+  async getDebatesByAuthor(userId: string): Promise<DebateEntity[]> {
+    const author = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ["debates"],
+    });
+    return author.debates;
+  }
+
+  async getDebatesByParticipant(userId: string): Promise<DebateEntity[]> {
+    const author = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ["participant_debates"],
+    });
+    return author.participant_debates;
+  }
+
+  async getCommentsByUser(userId: string): Promise<CommentEntity[]> {
+    const author = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ["comments"],
+    });
+    return author.comments;
   }
 }
