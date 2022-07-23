@@ -61,11 +61,11 @@ export class HeartsService {
     return result;
   }
 
-  async isHeart(query) {
+  async isHeart(query: CreateHeartDto) {
     const heart = await this.heartRepository.findOne({
       where: {
-        target_user: query.targetUser,
-        target_debate: query.targetDebate,
+        target_user: query.target_user_id,
+        target_debate: query.target_debate_id,
       },
     });
     return !!heart;
