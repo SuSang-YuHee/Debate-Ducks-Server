@@ -11,6 +11,7 @@ import { Connection, Repository } from "typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { ulid } from "ulid";
 import { AuthService } from "src/auth/auth.service";
+import { from, map, Observable } from "rxjs";
 
 @Injectable()
 export class UsersService {
@@ -24,7 +25,7 @@ export class UsersService {
 
   async createUser(name: string, email: string, password: string) {
     const userExist = await this.checkUserExists(email);
-
+    const profile_image = "temp default image";
     if (userExist) {
       throw new UnprocessableEntityException(
         "해당 이메일로는 가입할 수 없습니다.",
@@ -33,7 +34,13 @@ export class UsersService {
 
     const signupVerifyToken = uuid.v1();
 
-    await this.saveUser(name, email, password, signupVerifyToken);
+    await this.saveUser(
+      name,
+      email,
+      password,
+      profile_image,
+      signupVerifyToken,
+    );
     await this.sendMemberJoinEmail(email, signupVerifyToken);
   }
 
@@ -48,13 +55,15 @@ export class UsersService {
     name: string,
     email: string,
     password: string,
+    profile_image: string,
     signupVerifyToken: string,
   ) {
     const user = new UserEntity();
     user.id = ulid();
-    user.name = name;
+    user.nickname = name;
     user.email = email;
     user.password = password;
+    user.profile_image = profile_image;
     user.signupVerifyToken = signupVerifyToken;
     await this.usersRepository.save(user);
   }
@@ -73,7 +82,7 @@ export class UsersService {
     try {
       const user = new UserEntity();
       user.id = ulid();
-      user.name = name;
+      user.nickname = name;
       user.email = email;
       user.password = password;
       user.signupVerifyToken = signupVerifyToken;
@@ -97,7 +106,7 @@ export class UsersService {
     await this.connection.transaction(async (manager) => {
       const user = new UserEntity();
       user.id = ulid();
-      user.name = name;
+      user.nickname = name;
       user.email = email;
       user.password = password;
       user.signupVerifyToken = signupVerifyToken;
@@ -123,7 +132,7 @@ export class UsersService {
 
     return this.authService.login({
       id: user.id,
-      name: user.name,
+      name: user.nickname,
       email: user.email,
     });
   }
@@ -137,13 +146,16 @@ export class UsersService {
 
     return this.authService.login({
       id: user.id,
-      name: user.name,
+      name: user.nickname,
       email: user.email,
     });
   }
 
   async getUserInfo(userId: string): Promise<UserInfo> {
-    const user = await this.usersRepository.findOne({ id: userId });
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ["debates", "participant_debates", "comments"],
+    });
 
     if (!user) {
       throw new NotFoundException("유저가 존재하지 않습니다");
@@ -151,8 +163,34 @@ export class UsersService {
 
     return {
       id: user.id,
-      name: user.name,
+      name: user.nickname,
       email: user.email,
+      profile_image: user.profile_image,
+      debates: user.debates,
+      participant_debates: user.participant_debates,
+      comments: user.comments,
     };
+  }
+
+  async updateNickName(userId: string, body) {
+    const user: UserEntity = new UserEntity();
+    user.id = userId;
+    user.nickname = body.nickname;
+    from(this.usersRepository.update(userId, user));
+  }
+
+  async uploadImage(userId: string, fileName: string) {
+    const user: UserEntity = new UserEntity();
+    user.id = userId;
+    user.profile_image = fileName;
+    return from(this.usersRepository.update(userId, user));
+  }
+
+  getImage(userId: string): Observable<string> {
+    return from(this.usersRepository.findOne({ id: userId })).pipe(
+      map((user) => {
+        return user.profile_image;
+      }),
+    );
   }
 }
