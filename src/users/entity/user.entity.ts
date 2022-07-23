@@ -23,7 +23,7 @@ export class UserEntity {
   @Column({ nullable: true })
   profile_image: string;
 
-  @Column({ length: 60 })
+  @Column({ length: 60, select: false })
   signupVerifyToken: string;
 
   @OneToMany((type) => DebateEntity, (debate) => debate.author)
