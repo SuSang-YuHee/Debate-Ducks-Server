@@ -26,6 +26,8 @@ import { join } from "path";
 import { Observable, of, switchMap } from "rxjs";
 import { AuthGuard } from "src/auth.guard";
 import { AuthService } from "src/auth/auth.service";
+import { CommentEntity } from "src/comments/entities/comment.entity";
+import { DebateEntity } from "src/debates/entity/debate.entity";
 import {
   isFileExtensitonSafe,
   removeFile,
@@ -94,6 +96,27 @@ export class UsersController {
     this.authService.verify(jwtString);
 
     return this.usersService.getUserInfo(userId);
+  }
+
+  @Get("/:id/debates")
+  async getDebatesByAuthor(
+    @Param("id") userId: string,
+  ): Promise<DebateEntity[]> {
+    return this.usersService.getDebatesByAuthor(userId);
+  }
+
+  @Get("/:id/participant-debates")
+  async getDebatesByParticipant(
+    @Param("id") userId: string,
+  ): Promise<DebateEntity[]> {
+    return this.usersService.getDebatesByParticipant(userId);
+  }
+
+  @Get("/:id/comments")
+  async getCommentsByUser(
+    @Param("id") userId: string,
+  ): Promise<CommentEntity[]> {
+    return this.usersService.getCommentsByUser(userId);
   }
 
   @Patch("/:id")
