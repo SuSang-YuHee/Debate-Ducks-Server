@@ -21,12 +21,12 @@ export class HeartsController {
   }
 
   @Get()
-  async isHeart(@Query() query): Promise<boolean> {
+  async isHeart(@Query() query: CreateHeartDto): Promise<boolean> {
     return this.heartsService.isHeart(query);
   }
 
   @Delete()
-  async deleteHeart(@Body() dto: CreateHeartDto): Promise<number> {
+  async deleteHeart(@Query() dto: CreateHeartDto): Promise<number> {
     return this.heartsService.deleteHeart(dto);
   }
 }
