@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto } from "./dto/create-comment.dto";
+import { GetCommentsDto } from "./dto/get-comments.dto";
 import { UpdateCommentDto } from "./dto/update-comment.dto";
 import { CommentEntity } from "./entities/comment.entity";
 
@@ -25,7 +26,7 @@ export class CommentsController {
   @Get("/user/:id")
   async getCommentsWithUserId(
     @Param("id") id: string,
-    @Query() query,
+    @Query() query: GetCommentsDto,
   ): Promise<CommentEntity[]> {
     return await this.commentsService.getCommentsWithUserId(id, query);
   }
@@ -33,7 +34,7 @@ export class CommentsController {
   @Get("/debate/:id")
   async getCommentsWithDebateId(
     @Param("id") id: number,
-    @Query() query,
+    @Query() query: GetCommentsDto,
   ): Promise<CommentEntity[]> {
     return await this.commentsService.getCommentsWithDebateId(id, query);
   }

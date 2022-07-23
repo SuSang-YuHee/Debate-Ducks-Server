@@ -4,6 +4,7 @@ import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { Repository } from "typeorm";
 import { CreateCommentDto } from "./dto/create-comment.dto";
+import { GetCommentsDto } from "./dto/get-comments.dto";
 import { UpdateCommentDto } from "./dto/update-comment.dto";
 import { CommentEntity } from "./entities/comment.entity";
 
@@ -73,7 +74,7 @@ export class CommentsService {
     return result;
   }
 
-  async getCommentsWithUserId(id: string, query) {
+  async getCommentsWithUserId(id: string, query: GetCommentsDto) {
     const take_flag = 10;
     const skip_flag = take_flag * query.page;
     const order_flag = query.order;
