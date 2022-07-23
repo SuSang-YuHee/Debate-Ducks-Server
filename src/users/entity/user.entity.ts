@@ -11,14 +11,17 @@ export class UserEntity {
   @PrimaryColumn()
   id: string;
 
-  @Column({ length: 30 })
-  name: string;
+  @Column({ length: 30, unique: true })
+  nickname: string;
 
-  @Column({ length: 60 })
+  @Column({ length: 60, unique: true })
   email: string;
 
-  @Column({ length: 30 })
+  @Column({ length: 30, select: false })
   password: string;
+
+  @Column({ nullable: true })
+  profile_image: string;
 
   @Column({ length: 60 })
   signupVerifyToken: string;

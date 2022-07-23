@@ -11,12 +11,28 @@ import {
   UseGuards,
   LoggerService,
   Logger,
+  Patch,
+  UseInterceptors,
+  UploadedFile,
+  HttpException,
+  HttpStatus,
+  Request,
+  Res,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
+import { join } from "path";
+import { Observable, of, switchMap } from "rxjs";
 import { AuthGuard } from "src/auth.guard";
 import { AuthService } from "src/auth/auth.service";
+import {
+  isFileExtensitonSafe,
+  removeFile,
+  saveImageToStorage,
+} from "src/utils/image-storage";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserLoginDto } from "./dto/user-login.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { UserInfo } from "./UserInfo";
@@ -53,6 +69,20 @@ export class UsersController {
     return await this.usersService.login(email, password);
   }
 
+  // TODD: 카카오 소셜 로그인 구현필요
+  // @Post("/oauth/kakao")
+  // async kakaoLogin() {}
+
+  @Get("image")
+  getImage(@Query() query, @Res() res): Observable<Object> {
+    const userId = query.user;
+    return this.usersService.getImage(userId).pipe(
+      switchMap((imageName: string) => {
+        return of(res.sendFile(imageName, { root: "./uploads" }));
+      }),
+    );
+  }
+
   @UseGuards(AuthGuard)
   @Get(":id")
   async getUserInfo(
@@ -64,6 +94,41 @@ export class UsersController {
     this.authService.verify(jwtString);
 
     return this.usersService.getUserInfo(userId);
+  }
+
+  @Patch("/:id")
+  async updateNickName(@Param("id") userId: string, @Body() body) {
+    await this.usersService.updateNickName(userId, body);
+  }
+
+  @Patch("/:id/upload")
+  @UseInterceptors(FileInterceptor("file", saveImageToStorage))
+  async uploadFile(
+    @Param("id") user_id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const fileName = file?.filename;
+
+    if (!fileName) {
+      throw new HttpException(
+        "File must be a png, jpg/jpeg",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const imagesFolderPath = join(process.cwd(), "uploads");
+    const fullImagePath = join(imagesFolderPath + "/" + file.filename);
+
+    return isFileExtensitonSafe(fullImagePath).pipe(
+      switchMap((isFileLegit: boolean) => {
+        if (isFileLegit) {
+          const userId = user_id;
+          return this.usersService.uploadImage(userId, fileName);
+        }
+        removeFile(fullImagePath);
+        return of({ error: "File content does not match extension!" });
+      }),
+    );
   }
 
   // private printMyLog(dto) {
