@@ -17,19 +17,16 @@ export class FactchecksController {
 
   @Post()
   async createFactcheck(@Body() dto: CreateFactcheckDto): Promise<number> {
-    console.log(dto);
     return await this.factchecksService.createFactcheck(dto);
   }
 
   @Patch()
   async updateFactcheck(@Body() dto: UpdateFactcheckDto): Promise<number> {
-    console.log(dto);
     return await this.factchecksService.updateFactcheck(dto);
   }
 
   @Delete("/:id")
   async deleteFactcheck(@Param("id") factcheckId: number): Promise<number> {
-    console.log(factcheckId);
     return await this.factchecksService.deleteFactcheck(factcheckId);
   }
 }
