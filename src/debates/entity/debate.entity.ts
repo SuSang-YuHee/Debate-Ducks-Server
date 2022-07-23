@@ -52,6 +52,7 @@ export class DebateEntity {
 
   @Column({
     nullable: true,
+    select: false,
   })
   ended_date: Date;
 
