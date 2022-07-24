@@ -31,7 +31,7 @@ async function bootstrap() {
     credentials: true,
   });
   const config = new DocumentBuilder()
-    .setTitle("Cats example")
+    .setTitle("Debate Ducks")
     .setDescription("Debate-Ducks-Server-Api")
     .setVersion("1.0")
     .build();
