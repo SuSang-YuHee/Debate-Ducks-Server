@@ -29,7 +29,7 @@ export class VotesController {
   }
 
   @Get()
-  async isVoted(@Query() dto: IsVotedDto): Promise<boolean> {
+  async isVoted(@Query() dto: IsVotedDto) {
     return this.votesService.isVoted(dto);
   }
 
