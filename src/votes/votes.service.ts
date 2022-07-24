@@ -4,6 +4,7 @@ import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { Repository } from "typeorm";
 import { CreateVoteDto } from "./dto/create-vote.dto";
+import { IsVotedDto } from "./dto/is-voted.dto";
 import { VoteEntity } from "./entity/vote.entity";
 
 @Injectable()
@@ -84,5 +85,15 @@ export class VotesService {
     const result = vote.target_debate.id;
     await this.voteRepository.delete({ id: voteId });
     return result;
+  }
+
+  async isVoted(dto: IsVotedDto): Promise<boolean> {
+    const vote = await this.voteRepository.findOne({
+      where: {
+        target_user: dto.target_user_id,
+        target_debate: dto.target_debate_id,
+      },
+    });
+    return !!vote;
   }
 }

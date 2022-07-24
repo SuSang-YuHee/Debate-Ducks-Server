@@ -7,8 +7,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { CreateVoteDto } from "./dto/create-vote.dto";
+import { IsVotedDto } from "./dto/is-voted.dto";
 import { VoteInfo } from "./VoteInfo";
 import { VotesService } from "./votes.service";
 
@@ -24,6 +26,11 @@ export class VotesController {
   @Get("/:id")
   async getVotes(@Param("id") debateId: number) {
     return this.votesService.getVote(debateId);
+  }
+
+  @Get()
+  async isVoted(@Query() dto: IsVotedDto): Promise<boolean> {
+    return this.votesService.isVoted(dto);
   }
 
   @Patch()
