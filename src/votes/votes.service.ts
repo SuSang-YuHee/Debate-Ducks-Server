@@ -87,13 +87,24 @@ export class VotesService {
     return result;
   }
 
-  async isVoted(dto: IsVotedDto): Promise<boolean> {
+  async isVoted(dto: IsVotedDto) {
     const vote = await this.voteRepository.findOne({
       where: {
         target_user: dto.target_user_id,
         target_debate: dto.target_debate_id,
       },
     });
-    return !!vote;
+
+    const result = {};
+
+    if (!vote) {
+      result["isVote"] = false;
+      result["pros"] = false;
+    } else {
+      result["isVote"] = true;
+      result["pros"] = vote.pros;
+    }
+
+    return result;
   }
 }
