@@ -37,7 +37,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserLoginDto } from "./dto/user-login.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
-import { UserInfo } from "./UserInfo";
+import { UserInfoDto } from "./dto/user-info.dto";
 import { UsersService } from "./users.service";
 import {
   ApiTags,
@@ -45,6 +45,8 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
+  ApiHeader,
 } from "@nestjs/swagger";
 
 @Controller("users")
@@ -62,7 +64,7 @@ export class UsersController {
     summary: "유저 회원가입",
     description: "유저 정보를 받아 회원가입 처리를 합니다.",
   })
-  @ApiBody({})
+  @ApiBody({ type: CreateUserDto })
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     // this.printMyLog(dto);
     this.printLoggerServiceLog(dto);
@@ -75,6 +77,7 @@ export class UsersController {
     summary: "이메일 인증",
     description: "회원가입 중 유저의 이메일을 확인합니다.",
   })
+  @ApiBody({ type: VerifyEmailDto })
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
 
@@ -86,6 +89,7 @@ export class UsersController {
     summary: "유저 로그인",
     description: "유저 정보를 받아 로그인 합니다.",
   })
+  @ApiBody({ type: UserLoginDto })
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
 
@@ -100,6 +104,14 @@ export class UsersController {
   @ApiOperation({
     summary: "유저 프로필 사진 조회",
     description: "유저 정보를 받아 프로필 사진을 조회합니다.",
+  })
+  @ApiQuery({
+    name: "user",
+    required: true,
+    description: "불러올 유저의 id",
+  })
+  @ApiResponse({
+    description: "유저 프로필 사진 조회 성공 시 사진 파일이 반환됩니다.",
   })
   getImage(@Query() query, @Res() res): Observable<Object> {
     const userId = query.user;
@@ -116,10 +128,23 @@ export class UsersController {
     summary: "유저 정보 조회",
     description: "유저 인증 정보를 받아 유저가 가지고 있는 정보를 조회합니다.",
   })
+  @ApiHeader({
+    name: "Authorization",
+    description: "bearer token",
+  })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
+  })
+  @ApiResponse({
+    type: UserInfoDto,
+    description: "유저 정보 조회 성공 시 반환되는 값",
+  })
   async getUserInfo(
     @Headers() headers: any,
     @Param("id") userId: string,
-  ): Promise<UserInfo> {
+  ): Promise<UserInfoDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
 
     this.authService.verify(jwtString);
@@ -132,6 +157,11 @@ export class UsersController {
     summary: "유저가 작성한 토론 조회",
     description: "해당 유저가 작성한 토론을 리스트로 조회합니다.",
   })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
+  })
   async getDebatesByAuthor(
     @Param("id") userId: string,
   ): Promise<DebateEntity[]> {
@@ -142,6 +172,11 @@ export class UsersController {
   @ApiOperation({
     summary: "유저가 참여한 토론 조회",
     description: "해당 유저가 참여한 토론을 리스트로 조회합니다.",
+  })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
   })
   async getDebatesByParticipant(
     @Param("id") userId: string,
@@ -154,6 +189,11 @@ export class UsersController {
     summary: "유저가 작성한 댓글 조회",
     description: "해당 유저가 작성한 댓글을 리스트로 조회합니다.",
   })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
+  })
   async getCommentsByUser(
     @Param("id") userId: string,
   ): Promise<CommentEntity[]> {
@@ -165,7 +205,16 @@ export class UsersController {
     summary: "유저 닉네임 변경",
     description: "유저의 닉네임을 변경합니다.",
   })
-  async updateNickName(@Param("id") userId: string, @Body() body) {
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
+  })
+  @ApiBody({ type: UpdateUserDto })
+  async updateNickName(
+    @Param("id") userId: string,
+    @Body() body: UpdateUserDto,
+  ) {
     await this.usersService.updateNickName(userId, body);
   }
 
@@ -174,6 +223,11 @@ export class UsersController {
   @ApiOperation({
     summary: "유저 프로필 사진 등록 및 변경",
     description: "유저의 프로필 사진을 등록하거나 변경합니다.",
+  })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
   })
   async uploadFile(
     @Param("id") user_id: string,
