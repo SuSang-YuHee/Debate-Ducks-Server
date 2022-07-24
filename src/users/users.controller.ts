@@ -39,8 +39,16 @@ import { UserLoginDto } from "./dto/user-login.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { UserInfo } from "./UserInfo";
 import { UsersService } from "./users.service";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from "@nestjs/swagger";
 
 @Controller("users")
+@ApiTags("유저 API")
 export class UsersController {
   constructor(
     @Inject(Logger)
@@ -50,6 +58,11 @@ export class UsersController {
   ) {}
 
   @Post()
+  @ApiOperation({
+    summary: "유저 회원가입",
+    description: "유저 정보를 받아 회원가입 처리를 합니다.",
+  })
+  @ApiBody({})
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     // this.printMyLog(dto);
     this.printLoggerServiceLog(dto);
@@ -58,6 +71,10 @@ export class UsersController {
   }
 
   @Post("/email-verify")
+  @ApiOperation({
+    summary: "이메일 인증",
+    description: "회원가입 중 유저의 이메일을 확인합니다.",
+  })
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
 
@@ -65,6 +82,10 @@ export class UsersController {
   }
 
   @Post("/login")
+  @ApiOperation({
+    summary: "유저 로그인",
+    description: "유저 정보를 받아 로그인 합니다.",
+  })
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
 
@@ -76,10 +97,11 @@ export class UsersController {
   // async kakaoLogin() {}
 
   @Get("image")
-  getImage(
-    @Query() query: { user: string },
-    @Res() res: any,
-  ): Observable<Object> {
+  @ApiOperation({
+    summary: "유저 프로필 사진 조회",
+    description: "유저 정보를 받아 프로필 사진을 조회합니다.",
+  })
+  getImage(@Query() query, @Res() res): Observable<Object> {
     const userId = query.user;
     return this.usersService.getImage(userId).pipe(
       switchMap((imageName: string) => {
@@ -90,6 +112,10 @@ export class UsersController {
 
   @UseGuards(AuthGuard)
   @Get(":id")
+  @ApiOperation({
+    summary: "유저 정보 조회",
+    description: "유저 인증 정보를 받아 유저가 가지고 있는 정보를 조회합니다.",
+  })
   async getUserInfo(
     @Headers() headers: any,
     @Param("id") userId: string,
@@ -102,6 +128,10 @@ export class UsersController {
   }
 
   @Get("/:id/debates")
+  @ApiOperation({
+    summary: "유저가 작성한 토론 조회",
+    description: "해당 유저가 작성한 토론을 리스트로 조회합니다.",
+  })
   async getDebatesByAuthor(
     @Param("id") userId: string,
   ): Promise<DebateEntity[]> {
@@ -109,6 +139,10 @@ export class UsersController {
   }
 
   @Get("/:id/participant-debates")
+  @ApiOperation({
+    summary: "유저가 참여한 토론 조회",
+    description: "해당 유저가 참여한 토론을 리스트로 조회합니다.",
+  })
   async getDebatesByParticipant(
     @Param("id") userId: string,
   ): Promise<DebateEntity[]> {
@@ -116,6 +150,10 @@ export class UsersController {
   }
 
   @Get("/:id/comments")
+  @ApiOperation({
+    summary: "유저가 작성한 댓글 조회",
+    description: "해당 유저가 작성한 댓글을 리스트로 조회합니다.",
+  })
   async getCommentsByUser(
     @Param("id") userId: string,
   ): Promise<CommentEntity[]> {
@@ -123,15 +161,20 @@ export class UsersController {
   }
 
   @Patch("/:id")
-  async updateNickName(
-    @Param("id") userId: string,
-    @Body() body: { nickname: string },
-  ) {
+  @ApiOperation({
+    summary: "유저 닉네임 변경",
+    description: "유저의 닉네임을 변경합니다.",
+  })
+  async updateNickName(@Param("id") userId: string, @Body() body) {
     await this.usersService.updateNickName(userId, body);
   }
 
   @Patch("/:id/upload")
   @UseInterceptors(FileInterceptor("file", saveImageToStorage))
+  @ApiOperation({
+    summary: "유저 프로필 사진 등록 및 변경",
+    description: "유저의 프로필 사진을 등록하거나 변경합니다.",
+  })
   async uploadFile(
     @Param("id") user_id: string,
     @UploadedFile() file: Express.Multer.File,
