@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { Repository } from "typeorm";
-import { CreateHeartDto } from "./dto/create-heart.dto";
+import { HeartDto } from "./dto/heart.dto";
 import { HeartEntity } from "./entities/heart.entity";
 
 @Injectable()
@@ -17,7 +17,7 @@ export class HeartsService {
     private debateRepository: Repository<DebateEntity>,
   ) {}
 
-  async createHeart(dto: CreateHeartDto): Promise<number> {
+  async createHeart(dto: HeartDto): Promise<number> {
     const target_user = await this.userRepository.findOne({
       id: dto.target_user_id,
     });
@@ -44,7 +44,7 @@ export class HeartsService {
     }
   }
 
-  async deleteHeart(dto: CreateHeartDto): Promise<number> {
+  async deleteHeart(dto: HeartDto): Promise<number> {
     const heart = await this.heartRepository.findOne({
       where: {
         target_debate: dto.target_debate_id,
@@ -61,7 +61,7 @@ export class HeartsService {
     return result;
   }
 
-  async isHeart(query: CreateHeartDto) {
+  async isHeart(query: HeartDto) {
     const heart = await this.heartRepository.findOne({
       where: {
         target_user: query.target_user_id,
