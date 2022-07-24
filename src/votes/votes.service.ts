@@ -45,7 +45,7 @@ export class VotesService {
     }
   }
 
-  async getVote(debateId: number) {
+  async getVoteCount(debateId: number) {
     const pros_count = await this.voteRepository.count({
       where: {
         target_debate: debateId,

@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class CreateVoteDto {
+export class UpdateVoteDto {
   @ApiProperty({
     example: "TestUserId",
     description: "투표를 한 유저의 id입니다.",
@@ -17,7 +17,7 @@ export class CreateVoteDto {
 
   @ApiProperty({
     example: "true",
-    description: "찬성 혹은 반대 투표 값입니다.",
+    description: "수정할 찬성 혹은 반대 투표 값입니다.",
     required: true,
   })
   pros: boolean;
