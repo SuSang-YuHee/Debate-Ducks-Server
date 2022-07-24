@@ -4,7 +4,7 @@ import {
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { EmailService } from "src/email/email.service";
-import { UserInfo } from "./UserInfo";
+import { UserInfoDto } from "./dto/user-info.dto";
 import * as uuid from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Connection, Repository } from "typeorm";
@@ -153,7 +153,7 @@ export class UsersService {
     });
   }
 
-  async getUserInfo(userId: string): Promise<UserInfo> {
+  async getUserInfo(userId: string): Promise<UserInfoDto> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
       relations: ["debates", "participant_debates", "comments"],
