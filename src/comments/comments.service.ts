@@ -75,28 +75,26 @@ export class CommentsService {
   }
 
   async getCommentsWithUserId(id: string, query: GetCommentsDto) {
-    const take_flag = 10;
-    const skip_flag = take_flag * query.page;
-    const order_flag = query.order;
-    const result = await this.commentRepository.find({
-      where: {
-        target_user: id,
-      },
-      order: {
-        id: order_flag,
-      },
-      take: take_flag,
-      skip: skip_flag,
-      relations: ["target_user", "target_debate"],
-    });
+    const take_flag = query.take || 10;
+    const skip_flag = take_flag * (query.page || 0);
+    const order_flag = query.order || "ASC";
+    const result = await this.commentRepository
+      .createQueryBuilder("comment")
+      .select(["comment.id", "comment.pros", "comment.contents", "debate.id"])
+      .leftJoin("comment.target_debate", "debate")
+      .where("comment.target_user = :id", { id: id })
+      .orderBy("comment.id", order_flag)
+      .skip(skip_flag)
+      .take(take_flag)
+      .getMany();
 
     return result;
   }
 
-  async getCommentsWithDebateId(id: number, query) {
-    const take_flag = 10;
-    const skip_flag = take_flag * query.page;
-    const order_flag = query.order;
+  async getCommentsWithDebateId(id: number, query: GetCommentsDto) {
+    const take_flag = query.take || 10;
+    const skip_flag = take_flag * (query.page || 0);
+    const order_flag = query.order || "ASC";
     const result = await this.commentRepository.find({
       where: {
         target_debate: id,
@@ -106,7 +104,7 @@ export class CommentsService {
       },
       take: take_flag,
       skip: skip_flag,
-      relations: ["target_user", "target_debate"],
+      relations: ["target_user"],
     });
 
     return result;
