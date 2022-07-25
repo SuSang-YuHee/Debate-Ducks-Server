@@ -78,17 +78,6 @@ export class CommentsService {
     const take_flag = query.take || 10;
     const skip_flag = take_flag * (query.page || 0);
     const order_flag = query.order || "ASC";
-    // const result = await this.commentRepository.find({
-    //   where: {
-    //     target_user: id,
-    //   },
-    //   order: {
-    //     id: order_flag,
-    //   },
-    //   take: take_flag,
-    //   skip: skip_flag,
-    //   relations: ["target_user", "target_debate"],
-    // });
     const result = await this.commentRepository
       .createQueryBuilder("comment")
       .select(["comment.id", "comment.pros", "comment.contents", "debate.id"])
