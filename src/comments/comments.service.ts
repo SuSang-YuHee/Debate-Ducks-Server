@@ -75,9 +75,15 @@ export class CommentsService {
   }
 
   async getCommentsWithUserId(id: string, query: GetCommentsDto) {
+    const totalCount = await this.commentRepository.count({
+      where: {
+        target_user: id,
+      },
+    });
     const take_flag = query.take || 10;
     const skip_flag = take_flag * (query.page || 0);
     const order_flag = query.order || "ASC";
+    const lastPage = Math.ceil(totalCount / take_flag) - 1;
     const result = await this.commentRepository
       .createQueryBuilder("comment")
       .select(["comment.id", "comment.pros", "comment.contents", "debate.id"])
@@ -88,13 +94,22 @@ export class CommentsService {
       .take(take_flag)
       .getMany();
 
-    return result;
+    return {
+      list: result,
+      isLast: lastPage === skip_flag,
+    };
   }
 
   async getCommentsWithDebateId(id: number, query: GetCommentsDto) {
+    const totalCount = await this.commentRepository.count({
+      where: {
+        target_debate: id,
+      },
+    });
     const take_flag = query.take || 10;
-    const skip_flag = take_flag * (query.page || 0);
+    const skip_flag = take_flag * query.page;
     const order_flag = query.order || "ASC";
+    const lastPage = Math.ceil(totalCount / take_flag) - 1;
     const result = await this.commentRepository.find({
       where: {
         target_debate: id,
@@ -107,6 +122,9 @@ export class CommentsService {
       relations: ["target_user"],
     });
 
-    return result;
+    return {
+      list: result,
+      isLast: lastPage === skip_flag,
+    };
   }
 }
