@@ -20,7 +20,7 @@ export class UserEntity {
   @Column({ length: 30, select: false })
   password: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   profile_image: string;
 
   @Column({ length: 60, select: false })
