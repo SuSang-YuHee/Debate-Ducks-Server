@@ -14,4 +14,11 @@ export class GetCommentsDto {
     required: false,
   })
   order: "ASC" | "DESC";
+
+  @ApiProperty({
+    example: "9",
+    description: "리스트의 목록 개수입니다.",
+    required: false,
+  })
+  take: number;
 }
