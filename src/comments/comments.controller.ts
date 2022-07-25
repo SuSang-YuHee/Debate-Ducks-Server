@@ -11,6 +11,7 @@ import {
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto } from "./dto/create-comment.dto";
+import { GetCommentsResponseDto } from "./dto/get-comments-response.dto";
 import { GetCommentsDto } from "./dto/get-comments.dto";
 import { UpdateCommentDto } from "./dto/update-comment.dto";
 import { CommentEntity } from "./entities/comment.entity";
@@ -42,7 +43,7 @@ export class CommentsController {
   async getCommentsWithUserId(
     @Param("id") id: string,
     @Query() query: GetCommentsDto,
-  ): Promise<CommentEntity[]> {
+  ): Promise<GetCommentsResponseDto> {
     return await this.commentsService.getCommentsWithUserId(id, query);
   }
 
@@ -59,7 +60,7 @@ export class CommentsController {
   async getCommentsWithDebateId(
     @Param("id") id: number,
     @Query() query: GetCommentsDto,
-  ): Promise<CommentEntity[]> {
+  ): Promise<GetCommentsResponseDto> {
     return await this.commentsService.getCommentsWithDebateId(id, query);
   }
 
