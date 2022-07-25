@@ -14,7 +14,6 @@ import { AuthService } from "src/auth/auth.service";
 import { from, map, Observable } from "rxjs";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { CommentEntity } from "src/comments/entities/comment.entity";
-import { UserKakaoLoginDto } from "./dto/user-kakao-login.dto";
 
 @Injectable()
 export class UsersService {
