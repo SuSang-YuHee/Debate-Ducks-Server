@@ -48,7 +48,6 @@ import {
   ApiQuery,
   ApiHeader,
 } from "@nestjs/swagger";
-import { UserKakaoLoginDto } from "./dto/user-kakao-login.dto";
 
 @Controller("users")
 @ApiTags("유저 API")
