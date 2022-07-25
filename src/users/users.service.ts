@@ -234,6 +234,7 @@ export class UsersService {
 
   async getUserInfo(userId: string): Promise<UserInfoDto> {
     const user = await this.usersRepository.findOne({
+      select: ["id", "nickname", "email"],
       where: { id: userId },
       relations: ["debates", "participant_debates", "comments"],
     });
@@ -243,6 +244,7 @@ export class UsersService {
     }
 
     return {
+      id: user.id,
       nickname: user.nickname,
       email: user.email,
       profile_image: user.profile_image,
