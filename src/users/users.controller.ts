@@ -48,6 +48,7 @@ import {
   ApiQuery,
   ApiHeader,
 } from "@nestjs/swagger";
+import { UserKakaoLoginDto } from "./dto/user-kakao-login.dto";
 
 @Controller("users")
 @ApiTags("유저 API")
@@ -98,7 +99,9 @@ export class UsersController {
 
   // TODD: 카카오 소셜 로그인 구현필요
   // @Post("/oauth/kakao")
-  // async kakaoLogin() {}
+  // async kakaoLogin(@Query() dto: UserKakaoLoginDto) {
+  //   await this.usersService.kakaoLogin(dto);
+  // }
 
   @Get("image")
   @ApiOperation({
@@ -123,7 +126,7 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
-  @Get(":id")
+  @Get()
   @ApiOperation({
     summary: "유저 정보 조회",
     description: "유저 인증 정보를 받아 유저가 가지고 있는 정보를 조회합니다.",
@@ -132,22 +135,14 @@ export class UsersController {
     name: "Authorization",
     description: "bearer token",
   })
-  @ApiParam({
-    name: "id",
-    required: true,
-    description: "조회할 유저의 id",
-  })
   @ApiResponse({
     type: UserInfoDto,
     description: "유저 정보 조회 성공 시 반환되는 값",
   })
-  async getUserInfo(
-    @Headers() headers: any,
-    @Param("id") userId: string,
-  ): Promise<UserInfoDto> {
+  async getUserInfo(@Headers() headers: any): Promise<UserInfoDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
 
-    this.authService.verify(jwtString);
+    const userId = this.authService.verify(jwtString).userId;
 
     return this.usersService.getUserInfo(userId);
   }
