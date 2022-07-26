@@ -7,7 +7,7 @@ module.exports = {
   database: process.env.DATABASE_NAME,
   entities: ["dist/**/*.entity{.ts,.js}"],
   synchronize: false,
-  timezone: "local",
+  timezone: "-09:00",
   migrations: ["dist/migrations/*{.ts,.js}"],
   cli: {
     migrationsDir: "src/migrations",
