@@ -7,9 +7,15 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { AuthModule } from "src/auth/auth.module";
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
+import { HeartEntity } from "src/hearts/entities/heart.entity";
+import { DebateEntity } from "src/debates/entity/debate.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity]), EmailModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([UserEntity, HeartEntity, DebateEntity]),
+    EmailModule,
+    AuthModule,
+  ],
   controllers: [UsersController],
   providers: [UsersService, Logger],
 })
