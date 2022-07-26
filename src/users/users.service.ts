@@ -7,13 +7,14 @@ import { EmailService } from "src/email/email.service";
 import { UserInfoDto } from "./dto/user-info.dto";
 import * as uuid from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Connection, Repository } from "typeorm";
+import { Connection, In, Repository } from "typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { ulid } from "ulid";
 import { AuthService } from "src/auth/auth.service";
 import { from, map, Observable } from "rxjs";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { CommentEntity } from "src/comments/entities/comment.entity";
+import { HeartEntity } from "src/hearts/entities/heart.entity";
 
 @Injectable()
 export class UsersService {
@@ -21,6 +22,10 @@ export class UsersService {
     private emailService: EmailService,
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
+    @InjectRepository(HeartEntity)
+    private heartsRepository: Repository<HeartEntity>,
+    @InjectRepository(DebateEntity)
+    private debatesRepository: Repository<DebateEntity>,
     private connection: Connection,
     private authService: AuthService,
   ) {}
@@ -295,5 +300,43 @@ export class UsersService {
       relations: ["comments"],
     });
     return author.comments;
+  }
+
+  async getHeartsDebateByUser(userId: string, dto) {
+    const order_flag = dto.order || "DESC";
+    const take_flag = dto.count || 12;
+    const skip_flag = take_flag * Number(dto.page);
+    const result = await this.heartsRepository
+      .createQueryBuilder("heart")
+      .select(["heart", "d.id"])
+      .leftJoin("heart.target_debate", "d")
+      .where("heart.target_user = :id", { id: userId })
+      .getMany();
+
+    let newArr = [];
+    result.map((data) => {
+      newArr.push(data.target_debate.id);
+    });
+
+    const totalCount = newArr.length;
+    const lastPage = Math.ceil(totalCount / take_flag) - 1;
+    const last_flag = lastPage === Number(dto.page);
+
+    const debates = await this.debatesRepository.find({
+      where: {
+        id: In(newArr),
+      },
+      order: {
+        id: order_flag,
+      },
+      take: take_flag,
+      skip: skip_flag,
+      relations: ["author", "participant"],
+    });
+
+    return {
+      list: debates,
+      isLast: last_flag,
+    };
   }
 }

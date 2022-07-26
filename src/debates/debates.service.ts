@@ -136,10 +136,16 @@ export class DebatesService {
   }
 
   async searchDebates(dto: SearchDebatesDto) {
-    const order_flag = "ASC";
-    const take_flag = 9;
-    const skip_flag = take_flag * 0;
-
+    const totalCount = await this.debateRepository.count({
+      where: {
+        title: Like(`%${dto.title}%`),
+      },
+    });
+    const order_flag = dto.order || "DESC";
+    const take_flag = dto.count || 12;
+    const skip_flag = take_flag * dto.page;
+    const lastPage = Math.ceil(totalCount / take_flag) - 1;
+    const last_flag = lastPage === Number(dto.page);
     const searchDebates = await this.debateRepository.find({
       where: {
         title: Like(`%${dto.title}%`),
@@ -151,33 +157,51 @@ export class DebatesService {
       skip: skip_flag,
     });
 
-    return searchDebates;
+    return { list: searchDebates, isLast: last_flag };
   }
 
   async getDebates(dto: GetDebatesDto) {
-    const order_flag = dto.order || "ASC";
-    const take_flag = dto.count || 9;
-    const skip_flag = take_flag * dto.page || take_flag * 0;
-
+    const order_flag = dto.order || "DESC";
+    const take_flag = dto.count || 12;
+    const skip_flag = take_flag * dto.page;
     if (!dto.category) {
+      const totalCount = await this.debateRepository.count({
+        order: {
+          id: order_flag,
+        },
+        take: take_flag,
+        skip: skip_flag,
+        relations: ["author", "participant"],
+      });
       const debates = await this.debateRepository.find({
         order: {
           id: order_flag,
         },
         take: take_flag,
         skip: skip_flag,
-        relations: [
-          "author",
-          "participant",
-          "votes",
-          "factchecks",
-          "hearts",
-          "comments",
-        ],
+        relations: ["author", "participant"],
       });
 
-      return debates;
+      const lastPage = Math.ceil(totalCount / take_flag) - 1;
+      const last_flag = lastPage === Number(dto.page);
+
+      return {
+        list: debates,
+        isLast: last_flag,
+      };
     } else {
+      const totalCount = await this.debateRepository.count({
+        where: {
+          category: In(dto.category),
+        },
+        order: {
+          id: order_flag,
+        },
+        take: take_flag,
+        skip: skip_flag,
+        relations: ["author", "participant"],
+      });
+
       const debates = await this.debateRepository.find({
         where: {
           category: In(dto.category),
@@ -187,17 +211,16 @@ export class DebatesService {
         },
         take: take_flag,
         skip: skip_flag,
-        relations: [
-          "author",
-          "participant",
-          "votes",
-          "factchecks",
-          "hearts",
-          "comments",
-        ],
+        relations: ["author", "participant"],
       });
 
-      return debates;
+      const lastPage = Math.ceil(totalCount / take_flag) - 1;
+      const last_flag = lastPage === Number(dto.page);
+
+      return {
+        list: debates,
+        isLast: last_flag,
+      };
     }
   }
 

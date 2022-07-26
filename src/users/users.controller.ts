@@ -194,6 +194,20 @@ export class UsersController {
     return this.usersService.getCommentsByUser(userId);
   }
 
+  @Get("/:id/hearts")
+  @ApiOperation({
+    summary: "유저가 좋아요를 누른 토론 리스트 조회",
+    description: "해당 유저가 좋아요를 표시한 토론 리스트를 조회합니다.",
+  })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "조회할 유저의 id",
+  })
+  async getHeartsDebateByUser(@Param("id") userId: string, @Query() dto) {
+    return this.usersService.getHeartsDebateByUser(userId, dto);
+  }
+
   @Patch("/:id")
   @ApiOperation({
     summary: "유저 닉네임 변경",
