@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Matches, MaxLength, MinLength } from "class-validator";
 
 export class CreateDebateDto {
   @ApiProperty({
@@ -6,6 +7,9 @@ export class CreateDebateDto {
     description: "토론의 제목에 해당합니다.",
     required: true,
   })
+  @MinLength(5)
+  @MaxLength(80)
+  @Matches(/[^\s\w가-힣.,!?%&()]/)
   title: string;
 
   @ApiProperty({
