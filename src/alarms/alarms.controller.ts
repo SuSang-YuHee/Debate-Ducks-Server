@@ -1,0 +1,32 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from "@nestjs/common";
+import { AlarmsService } from "./alarms.service";
+import { CreateAlarmDto } from "./dto/create-alarm.dto";
+import { UpdateAlarmDto } from "./dto/update-alarm.dto";
+
+@Controller("alarms")
+export class AlarmsController {
+  constructor(private readonly alarmsService: AlarmsService) {}
+
+  @Post()
+  async createAlarm(@Body() dto: CreateAlarmDto) {
+    return this.alarmsService.createAlarm(dto);
+  }
+
+  @Get("/:id")
+  async getAlarm(@Param("id") alarmId: number) {
+    return this.alarmsService.getAlarm(alarmId);
+  }
+
+  @Delete("/id")
+  async deleteAlarm(@Param("id") alarmId: number) {
+    await this.alarmsService.deleteAlarm(alarmId);
+  }
+}
