@@ -136,9 +136,11 @@ export class DebatesService {
   }
 
   async searchDebates(dto: SearchDebatesDto) {
+    const title = decodeURI(dto.title);
+
     const totalCount = await this.debateRepository.count({
       where: {
-        title: Like(`%${dto.title}%`),
+        title: Like(`%${title}%`),
       },
     });
     const order_flag = dto.order || "DESC";
@@ -190,9 +192,12 @@ export class DebatesService {
         isLast: last_flag,
       };
     } else {
+      const categoryString = decodeURI(`${dto.category}`);
+      const categoryArr = categoryString.split(",");
+
       const totalCount = await this.debateRepository.count({
         where: {
-          category: In(dto.category),
+          category: In(categoryArr),
         },
         order: {
           id: order_flag,
@@ -204,7 +209,7 @@ export class DebatesService {
 
       const debates = await this.debateRepository.find({
         where: {
-          category: In(dto.category),
+          category: In(categoryArr),
         },
         order: {
           id: order_flag,
