@@ -147,7 +147,7 @@ export class DebatesService {
     const take_flag = dto.count || 12;
     const skip_flag = take_flag * dto.page;
     const lastPage = Math.ceil(totalCount / take_flag) - 1;
-    const last_flag = lastPage === Number(dto.page);
+    const last_flag = lastPage <= Number(dto.page);
     const searchDebates = await this.debateRepository.find({
       where: {
         title: Like(`%${dto.title}%`),
@@ -185,7 +185,7 @@ export class DebatesService {
       });
 
       const lastPage = Math.ceil(totalCount / take_flag) - 1;
-      const last_flag = lastPage === Number(dto.page);
+      const last_flag = lastPage <= Number(dto.page);
 
       return {
         list: debates,
@@ -220,7 +220,7 @@ export class DebatesService {
       });
 
       const lastPage = Math.ceil(totalCount / take_flag) - 1;
-      const last_flag = lastPage === Number(dto.page);
+      const last_flag = lastPage <= Number(dto.page);
 
       return {
         list: debates,

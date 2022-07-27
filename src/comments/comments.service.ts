@@ -84,7 +84,7 @@ export class CommentsService {
     const skip_flag = take_flag * (query.page || 0);
     const order_flag = query.order || "ASC";
     const lastPage = Math.ceil(totalCount / take_flag) - 1;
-    const last_flag = lastPage === Number(query.page);
+    const last_flag = lastPage <= Number(query.page);
     const result = await this.commentRepository
       .createQueryBuilder("comment")
       .select(["comment.id", "comment.pros", "comment.contents", "debate.id"])
@@ -111,7 +111,7 @@ export class CommentsService {
     const skip_flag = take_flag * query.page;
     const order_flag = query.order || "ASC";
     const lastPage = Math.ceil(totalCount / take_flag) - 1;
-    const last_flag = lastPage === Number(query.page);
+    const last_flag = lastPage <= Number(query.page);
     const result = await this.commentRepository.find({
       where: {
         target_debate: id,
