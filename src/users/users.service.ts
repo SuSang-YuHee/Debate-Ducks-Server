@@ -320,7 +320,7 @@ export class UsersService {
 
     const totalCount = newArr.length;
     const lastPage = Math.ceil(totalCount / take_flag) - 1;
-    const last_flag = lastPage === Number(dto.page);
+    const last_flag = lastPage <= Number(dto.page);
 
     const debates = await this.debatesRepository.find({
       where: {
