@@ -239,7 +239,6 @@ export class UsersService {
 
   async getUserInfo(userId: string): Promise<UserInfoDto> {
     const user = await this.usersRepository.findOne({
-      select: ["id", "nickname", "email"],
       where: { id: userId },
       relations: ["debates", "participant_debates", "comments"],
     });
@@ -270,12 +269,15 @@ export class UsersService {
     return from(this.usersRepository.update(userId, user));
   }
 
-  getImage(userId: string): Observable<string> {
-    return from(this.usersRepository.findOne({ id: userId })).pipe(
-      map((user) => {
-        return user.profile_image;
-      }),
-    );
+  async getImage(userId: string): Promise<string> {
+    const userEntity = await this.usersRepository.findOne({
+      select: ["profile_image"],
+      where: {
+        id: userId,
+      },
+    });
+    const profileImage = userEntity.profile_image;
+    return profileImage;
   }
 
   async getDebatesByAuthor(userId: string): Promise<DebateEntity[]> {
