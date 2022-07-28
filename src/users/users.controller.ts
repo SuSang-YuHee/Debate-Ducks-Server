@@ -113,15 +113,12 @@ export class UsersController {
     description: "불러올 유저의 id",
   })
   @ApiResponse({
-    description: "유저 프로필 사진 조회 성공 시 사진 파일이 반환됩니다.",
+    description: "유저 프로필 사진 조회 성공 시 사진 파일의 이름이 반환됩니다.",
   })
-  getImage(@Query() query, @Res() res): Observable<Object> {
+  async getImage(@Query() query): Promise<string> {
     const userId = query.user;
-    return this.usersService.getImage(userId).pipe(
-      switchMap((imageName: string) => {
-        return of(res.sendFile(imageName, { root: "./uploads" }));
-      }),
-    );
+    const imageName = await this.usersService.getImage(userId);
+    return imageName;
   }
 
   @UseGuards(AuthGuard)
