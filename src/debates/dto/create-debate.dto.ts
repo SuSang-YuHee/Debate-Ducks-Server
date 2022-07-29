@@ -9,7 +9,6 @@ export class CreateDebateDto {
   })
   @MinLength(5)
   @MaxLength(80)
-  @Matches(/[^\s\w가-힣.,!?%&()]/)
   title: string;
 
   @ApiProperty({
