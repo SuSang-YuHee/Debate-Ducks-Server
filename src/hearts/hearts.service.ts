@@ -37,7 +37,18 @@ export class HeartsService {
       const heart = new HeartEntity();
       heart.target_user = target_user;
       heart.target_debate = target_debate;
-      await this.heartRepository.save(heart);
+      await this.heartRepository.save(heart).then(async () => {
+        const heartsDebate = await this.debateRepository.findOne({
+          id: dto.target_debate_id,
+        });
+        const count = heartsDebate.hearts_cnt;
+        await this.debateRepository.update(
+          { id: dto.target_debate_id },
+          {
+            hearts_cnt: count + 1,
+          },
+        );
+      });
       return dto.target_debate_id;
     } else {
       return dto.target_debate_id;
@@ -56,7 +67,18 @@ export class HeartsService {
     const id = heart.id;
     const result = heart.target_debate.id;
 
-    await this.heartRepository.delete({ id: id });
+    await this.heartRepository.delete({ id: id }).then(async () => {
+      const heartsDebate = await this.debateRepository.findOne({
+        id: dto.target_debate_id,
+      });
+      const count = heartsDebate.hearts_cnt;
+      await this.debateRepository.update(
+        { id: dto.target_debate_id },
+        {
+          hearts_cnt: count - 1,
+        },
+      );
+    });
 
     return result;
   }

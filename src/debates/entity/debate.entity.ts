@@ -67,4 +67,9 @@ export class DebateEntity {
 
   @OneToMany((type) => CommentEntity, (comment) => comment.target_debate)
   comments: CommentEntity[];
+
+  @Column({
+    nullable: true,
+  })
+  hearts_cnt: number;
 }
