@@ -177,6 +177,7 @@ export class DebatesService {
     debate.author_pros = author_pros;
     debate.category = category;
     debate.contents = contents;
+    debate.hearts_cnt = 0;
     debate.created_date = new Date();
 
     return (await this.debateRepository.save(debate)).id;
