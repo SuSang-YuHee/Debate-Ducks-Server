@@ -7,7 +7,6 @@ import { VoteEntity } from "src/votes/entity/vote.entity";
 import { In, Like, Repository } from "typeorm";
 import { DebateInfo } from "./DebateInfo";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
-import { SearchDebatesDto } from "./dto/search-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 import { DebateEntity } from "./entity/debate.entity";
 
@@ -135,7 +134,7 @@ export class DebatesService {
     }
   }
 
-  async searchDebates(dto: SearchDebatesDto) {
+  async getDebates(dto: GetDebatesDto) {
     const title = decodeURI(dto.title);
 
     const totalCount = await this.debateRepository.count({
@@ -157,76 +156,10 @@ export class DebatesService {
       },
       take: take_flag,
       skip: skip_flag,
+      relations: ["author", "participant"],
     });
 
     return { list: searchDebates, isLast: last_flag };
-  }
-
-  async getDebates(dto: GetDebatesDto) {
-    const order_flag = dto.order || "DESC";
-    const take_flag = dto.count || 12;
-    const skip_flag = take_flag * dto.page;
-    if (!dto.category) {
-      const totalCount = await this.debateRepository.count({
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-      const debates = await this.debateRepository.find({
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-
-      const lastPage = Math.ceil(totalCount / take_flag) - 1;
-      const last_flag = lastPage <= Number(dto.page);
-
-      return {
-        list: debates,
-        isLast: last_flag,
-      };
-    } else {
-      const categoryString = decodeURI(`${dto.category}`);
-      const categoryArr = categoryString.split(",");
-
-      const totalCount = await this.debateRepository.count({
-        where: {
-          category: In(categoryArr),
-        },
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-
-      const debates = await this.debateRepository.find({
-        where: {
-          category: In(categoryArr),
-        },
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-
-      const lastPage = Math.ceil(totalCount / take_flag) - 1;
-      const last_flag = lastPage <= Number(dto.page);
-
-      return {
-        list: debates,
-        isLast: last_flag,
-      };
-    }
   }
 
   private async saveDebate(
