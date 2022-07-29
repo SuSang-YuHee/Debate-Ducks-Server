@@ -2,6 +2,13 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class GetDebatesDto {
   @ApiProperty({
+    example: "검색어",
+    description: "토론을 검색할 검색어에 해당합니다.",
+    required: false,
+  })
+  title: string;
+
+  @ApiProperty({
     example: "ASC",
     description: "토론 리스트 정렬에 해당합니다.",
     required: false,
@@ -21,11 +28,4 @@ export class GetDebatesDto {
     required: false,
   })
   page: number;
-
-  @ApiProperty({
-    example: "사회",
-    description: "토론 리스트의 카테고리 필터링 값에 해당합니다.",
-    required: false,
-  })
-  category: string[];
 }
