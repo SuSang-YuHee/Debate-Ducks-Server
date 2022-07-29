@@ -20,7 +20,6 @@ import { DebateInfo } from "./DebateInfo";
 import { DebatesService } from "./debates.service";
 import { CreateDebateDto } from "./dto/create-debate.dto";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
-import { SearchDebatesDto } from "./dto/search-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 
 @Controller("debates")
@@ -43,16 +42,6 @@ export class DebatesController {
       category,
       contents,
     );
-  }
-
-  @Get("/search")
-  @ApiOperation({
-    summary: "토론 검색",
-    description:
-      "검색어를 받아서 해당 검색어가 토론 제목에 포함 된 토론을 조회합니다.",
-  })
-  async searchDebates(@Query() dto: SearchDebatesDto) {
-    return this.debatesService.searchDebates(dto);
   }
 
   @Get("/:id")
