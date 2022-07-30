@@ -14,7 +14,7 @@ export interface DebateInfo {
   author: UserEntity;
   participant: UserEntity;
   factchecks: FactcheckEntity[];
-  heartCnt: number;
+  hearts_cnt: number;
   vote: {
     prosCnt: number;
     consCnt: number;
