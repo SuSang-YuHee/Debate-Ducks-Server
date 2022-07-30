@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { debate } from "src/events/utils";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { VoteEntity } from "src/votes/entity/vote.entity";
@@ -112,12 +111,6 @@ export class DebatesService {
       },
       relations: ["target_debate"],
     });
-    const heartCnt = await this.heartRepository.count({
-      where: {
-        target_debate: debateId,
-      },
-      relations: ["target_debate"],
-    });
     const debate = await this.debateRepository.findOne({
       where: { id: debateId },
       relations: ["author", "participant", "factchecks"],
@@ -127,7 +120,6 @@ export class DebatesService {
     } else {
       const result = {
         ...debate,
-        heartCnt,
         vote: { prosCnt: prosCnt, consCnt: consCnt },
       };
       return result;
