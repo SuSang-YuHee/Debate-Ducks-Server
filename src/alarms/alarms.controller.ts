@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
 } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
 import { AlarmsService } from "./alarms.service";
 import { CreateAlarmDto } from "./dto/create-alarm.dto";
 import { UpdateAlarmDto } from "./dto/update-alarm.dto";
 
 @Controller("alarms")
+@ApiTags("알람 API")
 export class AlarmsController {
   constructor(private readonly alarmsService: AlarmsService) {}
 
