@@ -11,6 +11,8 @@ import {
 } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { CreateVoteDto } from "./dto/create-vote.dto";
+import { GetVoteCountResponseDto } from "./dto/get-vote-count-response.dto";
+import { IsVotedResponseDto } from "./dto/is-voted-response.dto";
 import { IsVotedDto } from "./dto/is-voted.dto";
 import { UpdateVoteDto } from "./dto/update-vote.dto";
 import { VotesService } from "./votes.service";
@@ -39,7 +41,9 @@ export class VotesController {
     required: true,
     description: "투표수를 조회할 토론의 id",
   })
-  async getVoteCount(@Param("id") debateId: number) {
+  async getVoteCount(
+    @Param("id") debateId: number,
+  ): Promise<GetVoteCountResponseDto> {
     return this.votesService.getVoteCount(debateId);
   }
 
@@ -49,7 +53,7 @@ export class VotesController {
     description:
       "정보를 받아 해당 유저가 해당 토론에 투표를 했는지 반환합니다.",
   })
-  async isVoted(@Query() dto: IsVotedDto) {
+  async isVoted(@Query() dto: IsVotedDto): Promise<IsVotedResponseDto> {
     return this.votesService.isVoted(dto);
   }
 

@@ -4,6 +4,8 @@ import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { Repository } from "typeorm";
 import { CreateVoteDto } from "./dto/create-vote.dto";
+import { GetVoteCountResponseDto } from "./dto/get-vote-count-response.dto";
+import { IsVotedResponseDto } from "./dto/is-voted-response.dto";
 import { IsVotedDto } from "./dto/is-voted.dto";
 import { VoteEntity } from "./entity/vote.entity";
 
@@ -45,7 +47,7 @@ export class VotesService {
     }
   }
 
-  async getVoteCount(debateId: number) {
+  async getVoteCount(debateId: number): Promise<GetVoteCountResponseDto> {
     const pros_count = await this.voteRepository.count({
       where: {
         target_debate: debateId,
@@ -87,7 +89,7 @@ export class VotesService {
     return result;
   }
 
-  async isVoted(dto: IsVotedDto) {
+  async isVoted(dto: IsVotedDto): Promise<IsVotedResponseDto> {
     const vote = await this.voteRepository.findOne({
       where: {
         target_user: dto.target_user_id,
@@ -95,16 +97,17 @@ export class VotesService {
       },
     });
 
-    const result = {};
+    let isVote = false;
+    let pros = false;
 
     if (!vote) {
-      result["isVote"] = false;
-      result["pros"] = false;
+      isVote = false;
+      pros = false;
     } else {
-      result["isVote"] = true;
-      result["pros"] = vote.pros;
+      isVote = true;
+      pros = vote.pros;
     }
 
-    return result;
+    return { isVote, pros };
   }
 }
