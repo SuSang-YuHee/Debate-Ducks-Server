@@ -4,7 +4,7 @@ import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { VoteEntity } from "src/votes/entity/vote.entity";
 import { In, Like, Repository } from "typeorm";
-import { DebateInfo } from "./DebateInfo";
+import { DebateInfoResponseDto } from "./dto/debate-info-response.dto";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 import { DebateEntity } from "./entity/debate.entity";
@@ -48,6 +48,7 @@ export class DebatesService {
   }
 
   async updateDebate(dto: UpdateDebateDto) {
+    // TODO 업데이트 일시 분기
     if (!dto.participant_id) {
       await this.debateRepository.update(
         {
@@ -59,6 +60,7 @@ export class DebatesService {
           category: dto.category,
           video_url: dto.video_url,
           author_pros: dto.author_pros,
+          updated_date: new Date(),
         },
       );
     } else {
@@ -90,13 +92,14 @@ export class DebatesService {
           throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
         }
       } else {
+        // TODO 예외 메세징 처리
         throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
       }
     }
     return dto.id;
   }
 
-  async getDebateInfo(debateId: number): Promise<DebateInfo> {
+  async getDebateInfo(debateId: number): Promise<DebateInfoResponseDto> {
     const prosCnt = await this.voteRepository.count({
       where: {
         pros: true,
