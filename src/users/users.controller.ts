@@ -37,7 +37,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserLoginDto } from "./dto/user-login.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
-import { UserInfoDto } from "./dto/user-info.dto";
+import { UserInfoResponseDto } from "./dto/user-info-response.dto";
 import { UsersService } from "./users.service";
 import {
   ApiTags,
@@ -64,7 +64,6 @@ export class UsersController {
     summary: "유저 회원가입",
     description: "유저 정보를 받아 회원가입 처리를 합니다.",
   })
-  @ApiBody({ type: CreateUserDto })
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     // this.printMyLog(dto);
     this.printLoggerServiceLog(dto);
@@ -77,7 +76,6 @@ export class UsersController {
     summary: "이메일 인증",
     description: "회원가입 중 유저의 이메일을 확인합니다.",
   })
-  @ApiBody({ type: VerifyEmailDto })
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
 
@@ -89,7 +87,6 @@ export class UsersController {
     summary: "유저 로그인",
     description: "유저 정보를 받아 로그인 합니다.",
   })
-  @ApiBody({ type: UserLoginDto })
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
 
@@ -101,7 +98,7 @@ export class UsersController {
   // async kakaoLogin(@Query() dto: UserKakaoLoginDto) {
   //   await this.usersService.kakaoLogin(dto);
   // }
-
+  // @UseGuards(AuthGuard)
   @Get("image")
   @ApiOperation({
     summary: "유저 프로필 사진 조회",
@@ -132,10 +129,10 @@ export class UsersController {
     description: "bearer token",
   })
   @ApiResponse({
-    type: UserInfoDto,
-    description: "유저 정보 조회 성공 시 반환되는 값",
+    type: UserInfoResponseDto,
+    description: "유저 정보 조회 성공 시 반환되는 타입",
   })
-  async getUserInfo(@Headers() headers: any): Promise<UserInfoDto> {
+  async getUserInfo(@Headers() headers: any): Promise<UserInfoResponseDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
 
     const userId = this.authService.verify(jwtString).userId;
@@ -143,6 +140,7 @@ export class UsersController {
     return this.usersService.getUserInfo(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/debates")
   @ApiOperation({
     summary: "유저가 작성한 토론 조회",
@@ -159,6 +157,7 @@ export class UsersController {
     return this.usersService.getDebatesByAuthor(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/participant-debates")
   @ApiOperation({
     summary: "유저가 참여한 토론 조회",
@@ -175,6 +174,7 @@ export class UsersController {
     return this.usersService.getDebatesByParticipant(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/comments")
   @ApiOperation({
     summary: "유저가 작성한 댓글 조회",
@@ -191,6 +191,7 @@ export class UsersController {
     return this.usersService.getCommentsByUser(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/hearts")
   @ApiOperation({
     summary: "유저가 좋아요를 누른 토론 리스트 조회",
@@ -205,6 +206,7 @@ export class UsersController {
     return this.usersService.getHeartsDebateByUser(userId, dto);
   }
 
+  // @UseGuards(AuthGuard)
   @Patch("/:id")
   @ApiOperation({
     summary: "유저 닉네임 변경",
@@ -223,7 +225,7 @@ export class UsersController {
     await this.usersService.updateNickName(userId, body);
   }
 
-  @Patch("/:id/upload")
+  @Patch("/:id/image")
   @UseInterceptors(FileInterceptor("file", saveImageToStorage))
   @ApiOperation({
     summary: "유저 프로필 사진 등록 및 변경",
