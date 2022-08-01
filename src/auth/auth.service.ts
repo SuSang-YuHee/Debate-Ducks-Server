@@ -19,9 +19,10 @@ export class AuthService {
     const payload = { ...user };
 
     return jwt.sign(payload, this.config.jwtSecret, {
+      subject: "LoginAccessToken",
       expiresIn: "1d",
-      audience: "example.com",
-      issuer: "example.com",
+      audience: user.name,
+      issuer: process.env.SERVER_DOMAIN,
     });
   }
 
