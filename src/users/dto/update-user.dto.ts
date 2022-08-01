@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsString, MaxLength, MinLength } from "class-validator";
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -6,5 +7,8 @@ export class UpdateUserDto {
     description: "nickname",
     required: true,
   })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(30)
   nickname: string;
 }

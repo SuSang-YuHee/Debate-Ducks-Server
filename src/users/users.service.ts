@@ -4,7 +4,7 @@ import {
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { EmailService } from "src/email/email.service";
-import { UserInfoDto } from "./dto/user-info.dto";
+import { UserInfoResponseDto } from "./dto/user-info-response.dto";
 import * as uuid from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Connection, In, Repository } from "typeorm";
@@ -104,85 +104,6 @@ export class UsersService {
     }
   }
 
-  // async kakaoLogin(dto: UserKakaoLoginDto) {
-  //   const authorizationCode = dto.authorizationCode;
-  //   const KAKAO_CLIENT_ID = process.env.KAKAO_CLIENT_ID;
-  //   const KAKAO_REDIRECT_URI = process.env.KAKAO_REDIRECT_URI;
-  //   const grantType = "authorization_code";
-
-  //   if (authorizationCode) {
-  //     const response = await axios({
-  //       method: "POST",
-  //       url: `https://kauth.kakao.com/oauth/token?code=${authorizationCode}&client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&grant_type=${grantType}`,
-  //       headers: {
-  //         "Content-type": "application/x-www-form-urlencoded",
-  //       },
-  //     });
-
-  //     const { access_token } = response.data;
-
-  //     const kakaoUserInfo = await axios({
-  //       method: "GET",
-  //       url: "https://kapi.kakao.com/v2/user/me",
-  //       headers: {
-  //         Authorization: `Bearer ${access_token}`,
-  //         "Content-type": "application/x-www-form-urlencoded",
-  //       },
-  //     });
-
-  //     const { email, profile } = kakaoUserInfo.data.kakao_account;
-  //     const userInfo = await models.user.findOne({ where: { email } });
-
-  //     if (!userInfo) {
-  //       const newUserInfo = await models.user.create({
-  //         email: email,
-  //         name: profile.nickname,
-  //         profile: profile.profile_image_url,
-  //         // created_at: Date.now(),
-  //         sign_method: "kakao",
-  //       });
-
-  //       const accessToken = generateAccessToken(
-  //         JSON.stringify({
-  //           newUserInfo,
-  //         }),
-  //       );
-
-  //       console.log("accessToken : ", accessToken);
-
-  //       sendAccessToken(
-  //         res,
-  //         {
-  //           id: newUserInfo.dataValues.id,
-  //           email: newUserInfo.dataValues.email,
-  //           name: newUserInfo.dataValues.name,
-  //           profile: newUserInfo.dataValues.profile,
-  //           sign_method: newUserInfo.dataValues.sign_method,
-  //         },
-  //         accessToken,
-  //       );
-  //     } else {
-  //       const accessToken = generateAccessToken(
-  //         JSON.stringify({
-  //           userInfo,
-  //         }),
-  //       );
-  //       console.log("accessToken : ", accessToken);
-  //       sendAccessToken(
-  //         res,
-  //         {
-  //           id: userInfo.dataValues.id,
-  //           email: userInfo.dataValues.email,
-  //           name: userInfo.dataValues.name,
-  //           profile: userInfo.dataValues.profile,
-  //           sign_method: userInfo.dataValues.sign_method,
-  //         },
-  //         accessToken,
-  //       );
-  //     }
-
-  // }
-
   private async saveUserUsingTransaction(
     name: string,
     email: string,
@@ -237,7 +158,7 @@ export class UsersService {
     });
   }
 
-  async getUserInfo(userId: string): Promise<UserInfoDto> {
+  async getUserInfo(userId: string): Promise<UserInfoResponseDto> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
       relations: ["debates", "participant_debates", "comments"],
@@ -266,7 +187,7 @@ export class UsersService {
     const user: UserEntity = new UserEntity();
     user.id = userId;
     user.profile_image = fileName;
-    return from(this.usersRepository.update(userId, user));
+    return this.usersRepository.update(userId, user);
   }
 
   async getImage(userId: string): Promise<string> {
