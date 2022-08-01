@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
 } from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto } from "./dto/create-comment.dto";
 import { GetCommentsResponseDto } from "./dto/get-comments-response.dto";
@@ -55,7 +55,11 @@ export class CommentsController {
   @ApiParam({
     name: "id",
     required: true,
-    description: "댓글 리스트를 조회할 토론의 id",
+    description: "댓글 리스트를 조회할 토론의 id.",
+  })
+  @ApiResponse({
+    type: GetCommentsResponseDto,
+    description: "조회한 댓글 리스트의 반환 타입입니다.",
   })
   async getCommentsWithDebateId(
     @Param("id") id: number,
