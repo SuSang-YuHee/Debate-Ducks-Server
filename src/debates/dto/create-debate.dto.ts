@@ -14,7 +14,7 @@ export class CreateDebateDto {
     required: true,
   })
   @MinLength(5)
-  @MaxLength(80)
+  @MaxLength(50)
   title: string;
 
   @ApiProperty({

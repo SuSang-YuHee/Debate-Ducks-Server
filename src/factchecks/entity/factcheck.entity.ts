@@ -19,9 +19,9 @@ export class FactcheckEntity {
   @Column()
   pros: boolean;
 
-  @Column()
+  @Column({ type: "text" })
   description: string;
 
-  @Column()
+  @Column({ type: "text" })
   reference_url: string;
 }
