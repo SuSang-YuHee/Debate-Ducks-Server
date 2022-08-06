@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
 import { EmailService } from "src/email/email.service";
 import { UserInfoResponseDto } from "./dto/user-info-response.dto";
 import * as uuid from "uuid";
@@ -11,10 +13,11 @@ import { Connection, In, Repository } from "typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { ulid } from "ulid";
 import { AuthService } from "src/auth/auth.service";
-import { from, map, Observable } from "rxjs";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { CommentEntity } from "src/comments/entities/comment.entity";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
+import { UpdateUserNicknameDto } from "./dto/update-user-nickname.dto";
+import { UpdateUserPasswordDto } from "./dto/update-user-password.dto";
 
 @Injectable()
 export class UsersService {
@@ -40,6 +43,10 @@ export class UsersService {
     }
 
     const signupVerifyToken = uuid.v1();
+    const saltOrRounds = Number(process.env.PASSWORD_SALT);
+    const hashPassword = await bcrypt.hash(password, saltOrRounds);
+
+    password = hashPassword;
 
     await this.saveUser(
       name,
@@ -145,7 +152,15 @@ export class UsersService {
   }
 
   async login(email: string, password: string): Promise<string> {
-    const user = await this.usersRepository.findOne({ email, password });
+    const user = await this.usersRepository.findOne({
+      select: ["id", "email", "nickname", "password"],
+      where: { email },
+    });
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      throw new BadRequestException("비밀번호가 일치하지 않습니다.");
+    }
 
     if (!user) {
       throw new NotFoundException("유저가 존재하지 않습니다");
@@ -176,11 +191,31 @@ export class UsersService {
     };
   }
 
-  async updateNickName(userId: string, body) {
+  async updateNickName(userId: string, body: UpdateUserNicknameDto) {
     const user: UserEntity = new UserEntity();
     user.id = userId;
     user.nickname = body.nickname;
-    from(this.usersRepository.update(userId, user));
+    return this.usersRepository.update(userId, user);
+  }
+
+  async updatePassword(userId: string, body: UpdateUserPasswordDto) {
+    const user = await this.usersRepository.findOne({
+      select: ["password"],
+      where: { id: userId },
+    });
+    const isMatch = await bcrypt.compare(body.prevPassword, user.password);
+
+    if (!isMatch) {
+      throw new BadRequestException("이전 비밀번호가 일치하지 않습니다.");
+    } else {
+      const saltOrRounds = Number(process.env.PASSWORD_SALT);
+      const hashPassword = await bcrypt.hash(body.nextPassword, saltOrRounds);
+
+      return await this.usersRepository.update(
+        { id: userId },
+        { password: hashPassword },
+      );
+    }
   }
 
   async uploadImage(userId: string, fileName: string) {
