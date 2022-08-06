@@ -34,7 +34,8 @@ import {
   saveImageToStorage,
 } from "src/utils/image-storage";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateUserNicknameDto } from "./dto/update-user-nickname.dto";
+import { UpdateUserPasswordDto } from "./dto/update-user-password.dto";
 import { UserLoginDto } from "./dto/user-login.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { UserInfoResponseDto } from "./dto/user-info-response.dto";
@@ -44,7 +45,6 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiBody,
   ApiQuery,
   ApiHeader,
 } from "@nestjs/swagger";
@@ -207,7 +207,7 @@ export class UsersController {
   }
 
   // @UseGuards(AuthGuard)
-  @Patch("/:id")
+  @Patch("/:id/nickname")
   @ApiOperation({
     summary: "유저 닉네임 변경",
     description: "유저의 닉네임을 변경합니다.",
@@ -215,14 +215,30 @@ export class UsersController {
   @ApiParam({
     name: "id",
     required: true,
-    description: "조회할 유저의 id",
+    description: "변경할 유저의 id",
   })
-  @ApiBody({ type: UpdateUserDto })
   async updateNickName(
     @Param("id") userId: string,
-    @Body() body: UpdateUserDto,
+    @Body() body: UpdateUserNicknameDto,
   ) {
     await this.usersService.updateNickName(userId, body);
+  }
+
+  @Patch("/:id/password")
+  @ApiOperation({
+    summary: "유저 비밀번호 변경",
+    description: "유저의 닉네임을 변경합니다.",
+  })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "변경할 유저의 id",
+  })
+  async updatePassword(
+    @Param("id") userId: string,
+    @Body() body: UpdateUserPasswordDto,
+  ) {
+    await this.usersService.updatePassword(userId, body);
   }
 
   @Patch("/:id/image")

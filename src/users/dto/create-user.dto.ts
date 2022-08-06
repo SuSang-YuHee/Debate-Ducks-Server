@@ -22,7 +22,7 @@ export class CreateUserDto {
   })
   @IsString()
   @MinLength(2)
-  @MaxLength(30)
+  @MaxLength(15)
   readonly name: string;
 
   @ApiProperty({
