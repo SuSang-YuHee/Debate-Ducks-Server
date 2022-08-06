@@ -11,13 +11,13 @@ export class UserEntity {
   @PrimaryColumn()
   id: string;
 
-  @Column({ length: 30, unique: true })
+  @Column({ length: 15, unique: true })
   nickname: string;
 
   @Column({ length: 60, unique: true })
   email: string;
 
-  @Column({ length: 30, select: false })
+  @Column({ length: 255, select: false })
   password: string;
 
   @Column({ nullable: true })
