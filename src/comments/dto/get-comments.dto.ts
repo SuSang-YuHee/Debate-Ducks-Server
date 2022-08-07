@@ -7,7 +7,6 @@ export class GetCommentsDto {
     description: "조회 할 리스트의 페이지입니다.",
     required: false,
   })
-  @IsNumber()
   @IsOptional()
   page: number;
 
@@ -24,7 +23,6 @@ export class GetCommentsDto {
     description: "리스트의 목록 개수입니다.",
     required: false,
   })
-  @IsNumber()
   @IsOptional()
   take: number;
 }
