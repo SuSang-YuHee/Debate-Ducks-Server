@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -42,6 +47,15 @@ export class DebatesService {
   }
 
   async deleteDebate(debateId: number) {
+    const debate = await this.debateRepository.findOne({
+      where: { id: debateId },
+      relations: ["author", "participant"],
+    });
+    if (!!debate.author && !!debate.participant) {
+      throw new BadRequestException(
+        "참석자가 이미 참여한 토론은 삭제할 수 없습니다.",
+      );
+    }
     await this.debateRepository.delete({
       id: debateId,
     });
@@ -49,6 +63,16 @@ export class DebatesService {
 
   async updateDebate(dto: UpdateDebateDto) {
     // TODO 업데이트 일시 분기
+    const debate = await this.debateRepository.findOne({
+      where: { id: dto.id },
+      relations: ["author", "participant"],
+    });
+    if (!!debate.author && !!debate.participant) {
+      throw new BadRequestException(
+        "참석자가 이미 참여한 토론은 수정할 수 없습니다.",
+      );
+    }
+
     if (!dto.participant_id) {
       await this.debateRepository.update(
         {
