@@ -27,7 +27,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     const roomSize =
       this.server.sockets.adapter.rooms.get(data.debateId)?.size || 0;
 
-    if (roomSize < 2) {
+    if (roomSize < 2 && !roomId[socket.id]) {
       roomId[socket.id] = data.debateId;
       roomInfo[data.debateId] = roomInfo[data.debateId] || {
         size: 0,
@@ -41,6 +41,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
       roomInfo[data.debateId].size += 1;
       socket.join(data.debateId);
       socket.to(data.debateId).emit("peerJoin");
+    } else if (roomId[socket.id]) {
     } else {
       socket.emit("overcapacity");
     }
