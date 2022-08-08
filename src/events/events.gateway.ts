@@ -153,9 +153,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (roomInfo[data.debateId]) {
       clearInterval(roomInfo[data.debateId].debate);
       delete roomInfo[data.debateId];
-      socket.emit("debateDone");
-      socket.to(data.debateId).emit("debateDone");
-      console.log("토론 종료"); //!
+      socket.emit("debateDone", true);
+      socket.to(data.debateId).emit("debateDone", false);
     }
   }
 }
