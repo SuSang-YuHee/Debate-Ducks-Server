@@ -8,9 +8,11 @@ import {
 } from "nest-winston";
 import * as winston from "winston";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { NestExpressApplication } from "@nestjs/platform-express";
+import { join } from "path";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: WinstonModule.createLogger({
       transports: [
         new winston.transports.Console({
@@ -29,6 +31,9 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"],
     credentials: true,
+  });
+  app.useStaticAssets(join(__dirname, "..", "uploads"), {
+    prefix: "/uploads/",
   });
   const config = new DocumentBuilder()
     .setTitle("Debate Ducks")

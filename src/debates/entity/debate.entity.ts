@@ -10,7 +10,6 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from "typeorm";
 
 @Entity("Debate")
@@ -27,7 +26,9 @@ export class DebateEntity {
   @Column()
   title: string;
 
-  @Column()
+  @Column({
+    type: "text",
+  })
   contents: string;
 
   @Column({
@@ -47,7 +48,9 @@ export class DebateEntity {
   @CreateDateColumn()
   created_date: Date;
 
-  @UpdateDateColumn()
+  @Column({
+    nullable: true,
+  })
   updated_date: Date;
 
   @Column({
@@ -67,4 +70,9 @@ export class DebateEntity {
 
   @OneToMany((type) => CommentEntity, (comment) => comment.target_debate)
   comments: CommentEntity[];
+
+  @Column({
+    nullable: true,
+  })
+  hearts_cnt: number;
 }

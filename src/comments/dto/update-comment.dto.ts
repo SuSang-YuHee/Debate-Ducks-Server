@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class UpdateCommentDto {
   @ApiProperty({
@@ -6,6 +7,7 @@ export class UpdateCommentDto {
     description: "수정 할 댓글의 id입니다.",
     required: true,
   })
+  @IsNumber()
   id: number;
 
   @ApiProperty({
@@ -13,6 +15,8 @@ export class UpdateCommentDto {
     description: "수정 할 댓글의 찬성, 반대 값입니다.",
     required: false,
   })
+  @IsBoolean()
+  @IsOptional()
   pros: boolean;
 
   @ApiProperty({
@@ -20,5 +24,7 @@ export class UpdateCommentDto {
     description: "수정 할 댓글의 내용입니다.",
     required: false,
   })
+  @IsString()
+  @IsOptional()
   contents: string;
 }

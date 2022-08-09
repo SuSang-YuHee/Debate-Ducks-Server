@@ -34,17 +34,17 @@ import {
   saveImageToStorage,
 } from "src/utils/image-storage";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateUserNicknameDto } from "./dto/update-user-nickname.dto";
+import { UpdateUserPasswordDto } from "./dto/update-user-password.dto";
 import { UserLoginDto } from "./dto/user-login.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
-import { UserInfoDto } from "./dto/user-info.dto";
+import { UserInfoResponseDto } from "./dto/user-info-response.dto";
 import { UsersService } from "./users.service";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiBody,
   ApiQuery,
   ApiHeader,
 } from "@nestjs/swagger";
@@ -64,7 +64,6 @@ export class UsersController {
     summary: "유저 회원가입",
     description: "유저 정보를 받아 회원가입 처리를 합니다.",
   })
-  @ApiBody({ type: CreateUserDto })
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     // this.printMyLog(dto);
     this.printLoggerServiceLog(dto);
@@ -77,7 +76,6 @@ export class UsersController {
     summary: "이메일 인증",
     description: "회원가입 중 유저의 이메일을 확인합니다.",
   })
-  @ApiBody({ type: VerifyEmailDto })
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
 
@@ -89,7 +87,6 @@ export class UsersController {
     summary: "유저 로그인",
     description: "유저 정보를 받아 로그인 합니다.",
   })
-  @ApiBody({ type: UserLoginDto })
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
 
@@ -101,7 +98,7 @@ export class UsersController {
   // async kakaoLogin(@Query() dto: UserKakaoLoginDto) {
   //   await this.usersService.kakaoLogin(dto);
   // }
-
+  // @UseGuards(AuthGuard)
   @Get("image")
   @ApiOperation({
     summary: "유저 프로필 사진 조회",
@@ -113,15 +110,12 @@ export class UsersController {
     description: "불러올 유저의 id",
   })
   @ApiResponse({
-    description: "유저 프로필 사진 조회 성공 시 사진 파일이 반환됩니다.",
+    description: "유저 프로필 사진 조회 성공 시 사진 파일의 이름이 반환됩니다.",
   })
-  getImage(@Query() query, @Res() res): Observable<Object> {
+  async getImage(@Query() query): Promise<string> {
     const userId = query.user;
-    return this.usersService.getImage(userId).pipe(
-      switchMap((imageName: string) => {
-        return of(res.sendFile(imageName, { root: "./uploads" }));
-      }),
-    );
+    const imageName = await this.usersService.getImage(userId);
+    return imageName;
   }
 
   @UseGuards(AuthGuard)
@@ -135,10 +129,10 @@ export class UsersController {
     description: "bearer token",
   })
   @ApiResponse({
-    type: UserInfoDto,
-    description: "유저 정보 조회 성공 시 반환되는 값",
+    type: UserInfoResponseDto,
+    description: "유저 정보 조회 성공 시 반환되는 타입",
   })
-  async getUserInfo(@Headers() headers: any): Promise<UserInfoDto> {
+  async getUserInfo(@Headers() headers: any): Promise<UserInfoResponseDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
 
     const userId = this.authService.verify(jwtString).userId;
@@ -146,6 +140,7 @@ export class UsersController {
     return this.usersService.getUserInfo(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/debates")
   @ApiOperation({
     summary: "유저가 작성한 토론 조회",
@@ -162,6 +157,7 @@ export class UsersController {
     return this.usersService.getDebatesByAuthor(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/participant-debates")
   @ApiOperation({
     summary: "유저가 참여한 토론 조회",
@@ -178,6 +174,7 @@ export class UsersController {
     return this.usersService.getDebatesByParticipant(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/comments")
   @ApiOperation({
     summary: "유저가 작성한 댓글 조회",
@@ -194,6 +191,7 @@ export class UsersController {
     return this.usersService.getCommentsByUser(userId);
   }
 
+  // @UseGuards(AuthGuard)
   @Get("/:id/hearts")
   @ApiOperation({
     summary: "유저가 좋아요를 누른 토론 리스트 조회",
@@ -208,7 +206,8 @@ export class UsersController {
     return this.usersService.getHeartsDebateByUser(userId, dto);
   }
 
-  @Patch("/:id")
+  // @UseGuards(AuthGuard)
+  @Patch("/:id/nickname")
   @ApiOperation({
     summary: "유저 닉네임 변경",
     description: "유저의 닉네임을 변경합니다.",
@@ -216,17 +215,33 @@ export class UsersController {
   @ApiParam({
     name: "id",
     required: true,
-    description: "조회할 유저의 id",
+    description: "변경할 유저의 id",
   })
-  @ApiBody({ type: UpdateUserDto })
   async updateNickName(
     @Param("id") userId: string,
-    @Body() body: UpdateUserDto,
+    @Body() body: UpdateUserNicknameDto,
   ) {
     await this.usersService.updateNickName(userId, body);
   }
 
-  @Patch("/:id/upload")
+  @Patch("/:id/password")
+  @ApiOperation({
+    summary: "유저 비밀번호 변경",
+    description: "유저의 닉네임을 변경합니다.",
+  })
+  @ApiParam({
+    name: "id",
+    required: true,
+    description: "변경할 유저의 id",
+  })
+  async updatePassword(
+    @Param("id") userId: string,
+    @Body() body: UpdateUserPasswordDto,
+  ) {
+    await this.usersService.updatePassword(userId, body);
+  }
+
+  @Patch("/:id/image")
   @UseInterceptors(FileInterceptor("file", saveImageToStorage))
   @ApiOperation({
     summary: "유저 프로필 사진 등록 및 변경",

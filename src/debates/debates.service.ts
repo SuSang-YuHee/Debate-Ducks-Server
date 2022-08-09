@@ -1,13 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { debate } from "src/events/utils";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { VoteEntity } from "src/votes/entity/vote.entity";
 import { In, Like, Repository } from "typeorm";
-import { DebateInfo } from "./DebateInfo";
+import { DebateInfoResponseDto } from "./dto/debate-info-response.dto";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
-import { SearchDebatesDto } from "./dto/search-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 import { DebateEntity } from "./entity/debate.entity";
 
@@ -44,12 +47,32 @@ export class DebatesService {
   }
 
   async deleteDebate(debateId: number) {
+    const debate = await this.debateRepository.findOne({
+      where: { id: debateId },
+      relations: ["author", "participant"],
+    });
+    if (!!debate.author && !!debate.participant) {
+      throw new BadRequestException(
+        "참석자가 이미 참여한 토론은 삭제할 수 없습니다.",
+      );
+    }
     await this.debateRepository.delete({
       id: debateId,
     });
   }
 
   async updateDebate(dto: UpdateDebateDto) {
+    // TODO 업데이트 일시 분기
+    const debate = await this.debateRepository.findOne({
+      where: { id: dto.id },
+      relations: ["author", "participant"],
+    });
+    if (!!debate.author && !!debate.participant) {
+      throw new BadRequestException(
+        "참석자가 이미 참여한 토론은 수정할 수 없습니다.",
+      );
+    }
+
     if (!dto.participant_id) {
       await this.debateRepository.update(
         {
@@ -61,6 +84,7 @@ export class DebatesService {
           category: dto.category,
           video_url: dto.video_url,
           author_pros: dto.author_pros,
+          updated_date: new Date(),
         },
       );
     } else {
@@ -92,13 +116,14 @@ export class DebatesService {
           throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
         }
       } else {
+        // TODO 예외 메세징 처리
         throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
       }
     }
     return dto.id;
   }
 
-  async getDebateInfo(debateId: number): Promise<DebateInfo> {
+  async getDebateInfo(debateId: number): Promise<DebateInfoResponseDto> {
     const prosCnt = await this.voteRepository.count({
       where: {
         pros: true,
@@ -113,12 +138,6 @@ export class DebatesService {
       },
       relations: ["target_debate"],
     });
-    const heartCnt = await this.heartRepository.count({
-      where: {
-        target_debate: debateId,
-      },
-      relations: ["target_debate"],
-    });
     const debate = await this.debateRepository.findOne({
       where: { id: debateId },
       relations: ["author", "participant", "factchecks"],
@@ -128,14 +147,13 @@ export class DebatesService {
     } else {
       const result = {
         ...debate,
-        heartCnt,
         vote: { prosCnt: prosCnt, consCnt: consCnt },
       };
       return result;
     }
   }
 
-  async searchDebates(dto: SearchDebatesDto) {
+  async getDebates(dto: GetDebatesDto) {
     const title = decodeURI(dto.title);
 
     const totalCount = await this.debateRepository.count({
@@ -157,76 +175,10 @@ export class DebatesService {
       },
       take: take_flag,
       skip: skip_flag,
+      relations: ["author", "participant"],
     });
 
     return { list: searchDebates, isLast: last_flag };
-  }
-
-  async getDebates(dto: GetDebatesDto) {
-    const order_flag = dto.order || "DESC";
-    const take_flag = dto.count || 12;
-    const skip_flag = take_flag * dto.page;
-    if (!dto.category) {
-      const totalCount = await this.debateRepository.count({
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-      const debates = await this.debateRepository.find({
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-
-      const lastPage = Math.ceil(totalCount / take_flag) - 1;
-      const last_flag = lastPage <= Number(dto.page);
-
-      return {
-        list: debates,
-        isLast: last_flag,
-      };
-    } else {
-      const categoryString = decodeURI(`${dto.category}`);
-      const categoryArr = categoryString.split(",");
-
-      const totalCount = await this.debateRepository.count({
-        where: {
-          category: In(categoryArr),
-        },
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-
-      const debates = await this.debateRepository.find({
-        where: {
-          category: In(categoryArr),
-        },
-        order: {
-          id: order_flag,
-        },
-        take: take_flag,
-        skip: skip_flag,
-        relations: ["author", "participant"],
-      });
-
-      const lastPage = Math.ceil(totalCount / take_flag) - 1;
-      const last_flag = lastPage <= Number(dto.page);
-
-      return {
-        list: debates,
-        isLast: last_flag,
-      };
-    }
   }
 
   private async saveDebate(
@@ -244,6 +196,7 @@ export class DebatesService {
     debate.author_pros = author_pros;
     debate.category = category;
     debate.contents = contents;
+    debate.hearts_cnt = 0;
     debate.created_date = new Date();
 
     return (await this.debateRepository.save(debate)).id;

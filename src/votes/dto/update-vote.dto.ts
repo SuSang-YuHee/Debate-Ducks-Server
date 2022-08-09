@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsBoolean, IsNumber, IsString } from "class-validator";
 
 export class UpdateVoteDto {
   @ApiProperty({
@@ -6,6 +7,7 @@ export class UpdateVoteDto {
     description: "투표를 한 유저의 id입니다.",
     required: true,
   })
+  @IsString()
   target_user_id: string;
 
   @ApiProperty({
@@ -13,6 +15,7 @@ export class UpdateVoteDto {
     description: "투표를 한 토론의 id입니다.",
     required: true,
   })
+  @IsNumber()
   target_debate_id: number;
 
   @ApiProperty({
@@ -20,5 +23,6 @@ export class UpdateVoteDto {
     description: "수정할 찬성 혹은 반대 투표 값입니다.",
     required: true,
   })
+  @IsBoolean()
   pros: boolean;
 }

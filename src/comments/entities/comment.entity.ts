@@ -25,7 +25,9 @@ export class CommentEntity {
   })
   pros: boolean;
 
-  @Column()
+  @Column({
+    type: "text",
+  })
   contents: string;
 
   @CreateDateColumn()

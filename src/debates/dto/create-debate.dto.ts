@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Matches, MaxLength, MinLength } from "class-validator";
+import {
+  IsBoolean,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from "class-validator";
 
 export class CreateDebateDto {
   @ApiProperty({
@@ -8,8 +14,7 @@ export class CreateDebateDto {
     required: true,
   })
   @MinLength(5)
-  @MaxLength(80)
-  @Matches(/[^\s\w가-힣.,!?%&()]/)
+  @MaxLength(50)
   title: string;
 
   @ApiProperty({
@@ -17,6 +22,7 @@ export class CreateDebateDto {
     description: "토론의 작성자에 해당합니다.",
     required: true,
   })
+  @IsString()
   author_id: string;
 
   @ApiProperty({
@@ -24,13 +30,15 @@ export class CreateDebateDto {
     description: "토론 작성자의 찬반측에 해당합니다.",
     required: true,
   })
+  @IsBoolean()
   author_pros: boolean;
 
   @ApiProperty({
     example: "경제",
-    description: "토론의 주제에 해당합니다.",
+    description: "토론 주제의 종류에 해당합니다.",
     required: true,
   })
+  @IsString()
   category: string;
 
   @ApiProperty({
@@ -38,5 +46,7 @@ export class CreateDebateDto {
     description: "토론활 내용에 해당합니다.",
     required: true,
   })
+  @IsString()
+  @MaxLength(3000)
   contents: string;
 }

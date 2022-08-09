@@ -1,20 +1,23 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
 import { EmailService } from "src/email/email.service";
-import { UserInfoDto } from "./dto/user-info.dto";
+import { UserInfoResponseDto } from "./dto/user-info-response.dto";
 import * as uuid from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Connection, In, Repository } from "typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { ulid } from "ulid";
 import { AuthService } from "src/auth/auth.service";
-import { from, map, Observable } from "rxjs";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { CommentEntity } from "src/comments/entities/comment.entity";
 import { HeartEntity } from "src/hearts/entities/heart.entity";
+import { UpdateUserNicknameDto } from "./dto/update-user-nickname.dto";
+import { UpdateUserPasswordDto } from "./dto/update-user-password.dto";
 
 @Injectable()
 export class UsersService {
@@ -40,6 +43,10 @@ export class UsersService {
     }
 
     const signupVerifyToken = uuid.v1();
+    const saltOrRounds = Number(process.env.PASSWORD_SALT);
+    const hashPassword = await bcrypt.hash(password, saltOrRounds);
+
+    password = hashPassword;
 
     await this.saveUser(
       name,
@@ -104,85 +111,6 @@ export class UsersService {
     }
   }
 
-  // async kakaoLogin(dto: UserKakaoLoginDto) {
-  //   const authorizationCode = dto.authorizationCode;
-  //   const KAKAO_CLIENT_ID = process.env.KAKAO_CLIENT_ID;
-  //   const KAKAO_REDIRECT_URI = process.env.KAKAO_REDIRECT_URI;
-  //   const grantType = "authorization_code";
-
-  //   if (authorizationCode) {
-  //     const response = await axios({
-  //       method: "POST",
-  //       url: `https://kauth.kakao.com/oauth/token?code=${authorizationCode}&client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&grant_type=${grantType}`,
-  //       headers: {
-  //         "Content-type": "application/x-www-form-urlencoded",
-  //       },
-  //     });
-
-  //     const { access_token } = response.data;
-
-  //     const kakaoUserInfo = await axios({
-  //       method: "GET",
-  //       url: "https://kapi.kakao.com/v2/user/me",
-  //       headers: {
-  //         Authorization: `Bearer ${access_token}`,
-  //         "Content-type": "application/x-www-form-urlencoded",
-  //       },
-  //     });
-
-  //     const { email, profile } = kakaoUserInfo.data.kakao_account;
-  //     const userInfo = await models.user.findOne({ where: { email } });
-
-  //     if (!userInfo) {
-  //       const newUserInfo = await models.user.create({
-  //         email: email,
-  //         name: profile.nickname,
-  //         profile: profile.profile_image_url,
-  //         // created_at: Date.now(),
-  //         sign_method: "kakao",
-  //       });
-
-  //       const accessToken = generateAccessToken(
-  //         JSON.stringify({
-  //           newUserInfo,
-  //         }),
-  //       );
-
-  //       console.log("accessToken : ", accessToken);
-
-  //       sendAccessToken(
-  //         res,
-  //         {
-  //           id: newUserInfo.dataValues.id,
-  //           email: newUserInfo.dataValues.email,
-  //           name: newUserInfo.dataValues.name,
-  //           profile: newUserInfo.dataValues.profile,
-  //           sign_method: newUserInfo.dataValues.sign_method,
-  //         },
-  //         accessToken,
-  //       );
-  //     } else {
-  //       const accessToken = generateAccessToken(
-  //         JSON.stringify({
-  //           userInfo,
-  //         }),
-  //       );
-  //       console.log("accessToken : ", accessToken);
-  //       sendAccessToken(
-  //         res,
-  //         {
-  //           id: userInfo.dataValues.id,
-  //           email: userInfo.dataValues.email,
-  //           name: userInfo.dataValues.name,
-  //           profile: userInfo.dataValues.profile,
-  //           sign_method: userInfo.dataValues.sign_method,
-  //         },
-  //         accessToken,
-  //       );
-  //     }
-
-  // }
-
   private async saveUserUsingTransaction(
     name: string,
     email: string,
@@ -224,7 +152,15 @@ export class UsersService {
   }
 
   async login(email: string, password: string): Promise<string> {
-    const user = await this.usersRepository.findOne({ email, password });
+    const user = await this.usersRepository.findOne({
+      select: ["id", "email", "nickname", "password"],
+      where: { email },
+    });
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      throw new BadRequestException("비밀번호가 일치하지 않습니다.");
+    }
 
     if (!user) {
       throw new NotFoundException("유저가 존재하지 않습니다");
@@ -237,9 +173,8 @@ export class UsersService {
     });
   }
 
-  async getUserInfo(userId: string): Promise<UserInfoDto> {
+  async getUserInfo(userId: string): Promise<UserInfoResponseDto> {
     const user = await this.usersRepository.findOne({
-      select: ["id", "nickname", "email"],
       where: { id: userId },
       relations: ["debates", "participant_debates", "comments"],
     });
@@ -256,26 +191,49 @@ export class UsersService {
     };
   }
 
-  async updateNickName(userId: string, body) {
+  async updateNickName(userId: string, body: UpdateUserNicknameDto) {
     const user: UserEntity = new UserEntity();
     user.id = userId;
     user.nickname = body.nickname;
-    from(this.usersRepository.update(userId, user));
+    return this.usersRepository.update(userId, user);
+  }
+
+  async updatePassword(userId: string, body: UpdateUserPasswordDto) {
+    const user = await this.usersRepository.findOne({
+      select: ["password"],
+      where: { id: userId },
+    });
+    const isMatch = await bcrypt.compare(body.prevPassword, user.password);
+
+    if (!isMatch) {
+      throw new BadRequestException("이전 비밀번호가 일치하지 않습니다.");
+    } else {
+      const saltOrRounds = Number(process.env.PASSWORD_SALT);
+      const hashPassword = await bcrypt.hash(body.nextPassword, saltOrRounds);
+
+      return await this.usersRepository.update(
+        { id: userId },
+        { password: hashPassword },
+      );
+    }
   }
 
   async uploadImage(userId: string, fileName: string) {
     const user: UserEntity = new UserEntity();
     user.id = userId;
     user.profile_image = fileName;
-    return from(this.usersRepository.update(userId, user));
+    return this.usersRepository.update(userId, user);
   }
 
-  getImage(userId: string): Observable<string> {
-    return from(this.usersRepository.findOne({ id: userId })).pipe(
-      map((user) => {
-        return user.profile_image;
-      }),
-    );
+  async getImage(userId: string): Promise<string> {
+    const userEntity = await this.usersRepository.findOne({
+      select: ["profile_image"],
+      where: {
+        id: userId,
+      },
+    });
+    const profileImage = userEntity.profile_image;
+    return profileImage;
   }
 
   async getDebatesByAuthor(userId: string): Promise<DebateEntity[]> {

@@ -16,11 +16,10 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { DebateInfo } from "./DebateInfo";
+import { DebateInfoResponseDto } from "./dto/debate-info-response.dto";
 import { DebatesService } from "./debates.service";
 import { CreateDebateDto } from "./dto/create-debate.dto";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
-import { SearchDebatesDto } from "./dto/search-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
 
 @Controller("debates")
@@ -45,22 +44,18 @@ export class DebatesController {
     );
   }
 
-  @Get("/search")
-  @ApiOperation({
-    summary: "토론 검색",
-    description:
-      "검색어를 받아서 해당 검색어가 토론 제목에 포함 된 토론을 조회합니다.",
-  })
-  async searchDebates(@Query() dto: SearchDebatesDto) {
-    return this.debatesService.searchDebates(dto);
-  }
-
   @Get("/:id")
   @ApiOperation({
     summary: "토론 조회",
     description: "토론 id를 받아서 해당 토론의 정보를 조회합니다.",
   })
-  async getDebateInfo(@Param("id") debateId: number): Promise<DebateInfo> {
+  @ApiResponse({
+    type: DebateInfoResponseDto,
+    description: "토론 정보 조회 성공 시 반환되는 타입",
+  })
+  async getDebateInfo(
+    @Param("id") debateId: number,
+  ): Promise<DebateInfoResponseDto> {
     return this.debatesService.getDebateInfo(debateId);
   }
 
