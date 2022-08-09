@@ -67,6 +67,18 @@ export class DebatesService {
       where: { id: dto.id },
       relations: ["author", "participant"],
     });
+
+    if (!!dto.video_url) {
+      return await this.debateRepository.update(
+        {
+          id: dto.id,
+        },
+        {
+          video_url: dto.video_url,
+        },
+      );
+    }
+
     if (!!debate.author && !!debate.participant) {
       throw new BadRequestException(
         "참석자가 이미 참여한 토론은 수정할 수 없습니다.",
@@ -82,7 +94,6 @@ export class DebatesService {
           title: dto.title,
           contents: dto.contents,
           category: dto.category,
-          video_url: dto.video_url,
           author_pros: dto.author_pros,
           updated_date: new Date(),
         },
