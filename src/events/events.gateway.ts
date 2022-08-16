@@ -11,7 +11,7 @@ import { Server, Socket } from "socket.io";
 import Peer from "simple-peer";
 import { roomId, roomInfo, debate } from "./utils";
 
-@WebSocketGateway({ cors: { origin: "*" } }) //Todo: 주소 지정 필요
+@WebSocketGateway({ cors: { origin: "*" } }) //Todo: 주소 지정 필요 / but 환경 변수가 안먹힘 / 직접 적어넣은 주소는 가능
 export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
   afterInit() {
@@ -128,7 +128,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayDisconnect {
   handleSkip(@MessageBody() data: { debateId: string; isPros: boolean }) {
     if (!roomInfo[data.debateId]) return;
     if (
-      //! roomInfo[data.debateId].time < 60 &&
+      roomInfo[data.debateId].time < 120 &&
       roomInfo[data.debateId].time > 1 &&
       ((data.isPros &&
         (roomInfo[data.debateId].turn === 1 ||
