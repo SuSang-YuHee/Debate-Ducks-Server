@@ -46,7 +46,7 @@ export class UsersService {
 
     if (userNicknameExist) {
       throw new UnprocessableEntityException(
-        "해당 닉네임은 이미 사용 중 입니다. 다른 닉네임을 사용해주세요",
+        "해당 이름은 이미 사용 중 입니다.",
       );
     }
 
