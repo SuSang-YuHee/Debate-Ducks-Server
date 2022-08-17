@@ -34,11 +34,19 @@ export class UsersService {
   ) {}
 
   async createUser(name: string, email: string, password: string) {
-    const userExist = await this.checkUserExists(email);
+    const userEmailExist = await this.checkUserEmailExists(email);
+    const userNicknameExist = await this.checkUserNicknameExists(name);
     const profile_image = "temp default image";
-    if (userExist) {
+
+    if (userEmailExist) {
       throw new UnprocessableEntityException(
         "해당 이메일로는 가입할 수 없습니다.",
+      );
+    }
+
+    if (userNicknameExist) {
+      throw new UnprocessableEntityException(
+        "해당 닉네임은 이미 사용 중 입니다. 다른 닉네임을 사용해주세요",
       );
     }
 
@@ -131,8 +139,14 @@ export class UsersService {
     });
   }
 
-  private async checkUserExists(emailAddress: string): Promise<boolean> {
+  private async checkUserEmailExists(emailAddress: string): Promise<boolean> {
     const user = await this.usersRepository.findOne({ email: emailAddress });
+
+    return user !== undefined;
+  }
+
+  private async checkUserNicknameExists(name: string): Promise<boolean> {
+    const user = await this.usersRepository.findOne({ nickname: name });
 
     return user !== undefined;
   }
