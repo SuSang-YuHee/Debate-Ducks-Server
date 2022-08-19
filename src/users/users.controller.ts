@@ -18,6 +18,7 @@ import {
   HttpStatus,
   Request,
   Res,
+  HttpCode,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -64,6 +65,7 @@ export class UsersController {
     summary: "유저 회원가입",
     description: "유저 정보를 받아 회원가입 처리를 합니다.",
   })
+  @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     // this.printMyLog(dto);
     this.printLoggerServiceLog(dto);
@@ -76,6 +78,7 @@ export class UsersController {
     summary: "이메일 인증",
     description: "회원가입 중 유저의 이메일을 확인합니다.",
   })
+  @HttpCode(HttpStatus.ACCEPTED)
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
 
@@ -87,18 +90,13 @@ export class UsersController {
     summary: "유저 로그인",
     description: "유저 정보를 받아 로그인 합니다.",
   })
+  @HttpCode(HttpStatus.OK)
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
 
     return await this.usersService.login(email, password);
   }
 
-  // TODD: 카카오 소셜 로그인 구현필요
-  // @Post("/oauth/kakao")
-  // async kakaoLogin(@Query() dto: UserKakaoLoginDto) {
-  //   await this.usersService.kakaoLogin(dto);
-  // }
-  // @UseGuards(AuthGuard)
   @Get("image")
   @ApiOperation({
     summary: "유저 프로필 사진 조회",
@@ -132,6 +130,7 @@ export class UsersController {
     type: UserInfoResponseDto,
     description: "유저 정보 조회 성공 시 반환되는 타입",
   })
+  @HttpCode(HttpStatus.OK)
   async getUserInfo(@Headers() headers: any): Promise<UserInfoResponseDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
 
@@ -151,6 +150,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async getDebatesByAuthor(
     @Param("id") userId: string,
   ): Promise<DebateEntity[]> {
@@ -168,6 +168,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async getDebatesByParticipant(
     @Param("id") userId: string,
   ): Promise<DebateEntity[]> {
@@ -185,6 +186,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async getCommentsByUser(
     @Param("id") userId: string,
   ): Promise<CommentEntity[]> {
@@ -202,6 +204,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async getHeartsDebateByUser(@Param("id") userId: string, @Query() dto) {
     return this.usersService.getHeartsDebateByUser(userId, dto);
   }
@@ -217,6 +220,7 @@ export class UsersController {
     required: true,
     description: "변경할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async updateNickName(
     @Param("id") userId: string,
     @Body() body: UpdateUserNicknameDto,
@@ -234,6 +238,7 @@ export class UsersController {
     required: true,
     description: "변경할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async updatePassword(
     @Param("id") userId: string,
     @Body() body: UpdateUserPasswordDto,
@@ -252,6 +257,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @HttpCode(HttpStatus.OK)
   async uploadFile(
     @Param("id") user_id: string,
     @UploadedFile() file: Express.Multer.File,
