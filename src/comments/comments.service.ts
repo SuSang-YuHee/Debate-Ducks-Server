@@ -1,4 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -23,9 +27,19 @@ export class CommentsService {
     const target_user = await this.userRepository.findOne({
       id: dto.target_user_id,
     });
+
+    if (!target_user) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     const target_debate = await this.debateRepository.findOne({
       id: dto.target_debate_id,
     });
+
+    if (!target_debate) {
+      throw new NotFoundException("해당 토론을 찾지 못했습니다.");
+    }
+
     const comment = new CommentEntity();
 
     comment.target_user = target_user;
@@ -60,12 +74,20 @@ export class CommentsService {
   }
 
   async deleteComment(id: number): Promise<number> {
+    if (!id) {
+      throw new BadRequestException("삭제 할 id가 옳바르지 않습니다.");
+    }
+
     const data = await this.commentRepository.findOne({
       where: {
         id: id,
       },
       relations: ["target_debate"],
     });
+
+    if (!id) {
+      throw new NotFoundException("삭제 할 댓글을 찾지 못했습니다.");
+    }
 
     const result = data.target_debate.id;
 
