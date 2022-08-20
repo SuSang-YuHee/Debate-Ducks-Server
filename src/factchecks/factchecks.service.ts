@@ -1,4 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -22,9 +26,19 @@ export class FactchecksService {
     const target_user = await this.userRepository.findOne({
       id: dto.target_user_id,
     });
+
+    if (!target_user) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     const target_debate = await this.debateRepository.findOne({
       id: dto.target_debate_id,
     });
+
+    if (!target_debate) {
+      throw new NotFoundException("해당 토론을 찾지 못했습니다.");
+    }
+
     const factcheck = new FactcheckEntity();
 
     factcheck.target_user = target_user;
@@ -38,12 +52,23 @@ export class FactchecksService {
   }
 
   async deleteFactcheck(factcheckId: number): Promise<number> {
+    if (!factcheckId) {
+      throw new BadRequestException(
+        "삭제할 팩트체크의 id값이 옳바르게 전달되지 않았습니다.",
+      );
+    }
+
     const data = await this.factcheckRepository.findOne({
       where: {
         id: factcheckId,
       },
       relations: ["target_debate"],
     });
+
+    if (!data) {
+      throw new NotFoundException("삭제할 팩트체크를 찾지 못했습니다.");
+    }
+
     const result = data.target_debate.id;
     await this.factcheckRepository.delete({ id: factcheckId });
     return result;
@@ -56,6 +81,11 @@ export class FactchecksService {
       },
       relations: ["target_debate"],
     });
+
+    if (!data) {
+      throw new NotFoundException("업데이트 할 팩트체크를 찾지 못했습니다.");
+    }
+
     const result = data.target_debate.id;
     await this.factcheckRepository.update(
       {
