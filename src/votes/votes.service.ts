@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -24,9 +29,15 @@ export class VotesService {
     const target_user = await this.userRepository.findOne({
       id: dto.target_user_id,
     });
+    if (!target_user) {
+      throw new NotFoundException("해당 ID의 유저를 찾지 못했습니다.");
+    }
     const target_debate = await this.debateRepository.findOne({
       id: dto.target_debate_id,
     });
+    if (!target_debate) {
+      throw new NotFoundException("해당 ID의 토론을 찾지 못했습니다.");
+    }
 
     const exist = await this.voteRepository.findOne({
       where: {
@@ -43,7 +54,10 @@ export class VotesService {
 
       await this.voteRepository.save(vote);
     } else {
-      throw new HttpException("Already Exist", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "이미 해당 토론에 투표를 하셨습니다.",
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -67,12 +81,21 @@ export class VotesService {
     const target_user = await this.userRepository.findOne({
       id: dto.target_user_id,
     });
+    if (!target_user) {
+      throw new NotFoundException("해당 ID의 유저를 찾지 못했습니다.");
+    }
     const target_debate = await this.debateRepository.findOne({
       id: dto.target_debate_id,
     });
+    if (!target_debate) {
+      throw new NotFoundException("해당 ID의 토론을 찾지 못했습니다.");
+    }
 
-    await this.voteRepository.update(
-      { target_user: target_user, target_debate: target_debate },
+    return await this.voteRepository.update(
+      {
+        target_user: target_user,
+        target_debate: target_debate,
+      },
       {
         pros: dto.pros,
       },
@@ -84,6 +107,9 @@ export class VotesService {
       where: { id: voteId },
       relations: ["target_debate"],
     });
+    if (!vote) {
+      throw new NotFoundException("해당 투표를 찾지 못했습니다.");
+    }
     const result = vote.target_debate.id;
     await this.voteRepository.delete({ id: voteId });
     return result;

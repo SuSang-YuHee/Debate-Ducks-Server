@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DebateEntity } from "src/debates/entity/debate.entity";
 import { UserEntity } from "src/users/entity/user.entity";
@@ -21,9 +21,15 @@ export class HeartsService {
     const target_user = await this.userRepository.findOne({
       id: dto.target_user_id,
     });
+    if (!target_user) {
+      throw new NotFoundException("해당 ID의 유저를 찾지 못했습니다.");
+    }
     const target_debate = await this.debateRepository.findOne({
       id: dto.target_debate_id,
     });
+    if (!target_debate) {
+      throw new NotFoundException("해당 ID의 토론을 찾지 못했습니다.");
+    }
 
     const exist = await this.heartRepository.findOne({
       where: {
@@ -63,22 +69,32 @@ export class HeartsService {
       },
       relations: ["target_debate", "target_user"],
     });
+    if (!heart) {
+      throw new NotFoundException("해당 정보로 좋아요를 찾지 못했습니다.");
+    }
 
     const id = heart.id;
     const result = heart.target_debate.id;
 
-    await this.heartRepository.delete({ id: id }).then(async () => {
-      const heartsDebate = await this.debateRepository.findOne({
-        id: dto.target_debate_id,
+    await this.heartRepository
+      .delete({
+        id: id,
+      })
+      .then(async () => {
+        const heartsDebate = await this.debateRepository.findOne({
+          id: dto.target_debate_id,
+        });
+        const count = heartsDebate.hearts_cnt;
+        await this.debateRepository.update(
+          { id: dto.target_debate_id },
+          {
+            hearts_cnt: count - 1,
+          },
+        );
+      })
+      .catch((e) => {
+        return e;
       });
-      const count = heartsDebate.hearts_cnt;
-      await this.debateRepository.update(
-        { id: dto.target_debate_id },
-        {
-          hearts_cnt: count - 1,
-        },
-      );
-    });
 
     return result;
   }
