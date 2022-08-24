@@ -10,13 +10,19 @@ import {
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto } from "./dto/create-comment.dto";
 import { GetCommentsResponseDto } from "./dto/get-comments-response.dto";
 import { GetCommentsDto } from "./dto/get-comments.dto";
 import { UpdateCommentDto } from "./dto/update-comment.dto";
-import { CommentEntity } from "./entities/comment.entity";
 
 @Controller("comments")
 @ApiTags("댓글 API")
@@ -28,6 +34,7 @@ export class CommentsController {
     summary: "댓글 작성",
     description: "정보를 받아 댓글을 생성합니다.",
   })
+  @ApiCreatedResponse({ description: "댓글을 성공적으로 생성" })
   @HttpCode(HttpStatus.CREATED)
   async createComment(@Body() dto: CreateCommentDto): Promise<number> {
     return await this.commentsService.createComment(dto);
@@ -43,6 +50,7 @@ export class CommentsController {
     required: true,
     description: "댓글 리스트를 조회할 유저의 id",
   })
+  @ApiOkResponse({ description: "댓글 리스트를 성공적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getCommentsWithUserId(
     @Param("id") id: string,
@@ -61,9 +69,9 @@ export class CommentsController {
     required: true,
     description: "댓글 리스트를 조회할 토론의 id.",
   })
-  @ApiResponse({
+  @ApiOkResponse({
+    description: "댓글 리스트를 성공적으로 조회",
     type: GetCommentsResponseDto,
-    description: "조회한 댓글 리스트의 반환 타입입니다.",
   })
   @HttpCode(HttpStatus.OK)
   async getCommentsWithDebateId(
@@ -76,8 +84,9 @@ export class CommentsController {
   @Patch()
   @ApiOperation({
     summary: "댓글 수정",
-    description: "유저 id를 받아 댓글 리스트를 조회합니다.",
+    description: "댓글을 수정합니다.",
   })
+  @ApiOkResponse({ description: "댓글을 성공적으로 수정" })
   @HttpCode(HttpStatus.OK)
   async updateComment(@Body() dto: UpdateCommentDto): Promise<number> {
     return await this.commentsService.updateComment(dto);
@@ -92,6 +101,9 @@ export class CommentsController {
     name: "id",
     required: true,
     description: "삭제 할 댓글의 id",
+  })
+  @ApiNoContentResponse({
+    description: "댓글을 성공적으로 삭제",
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(@Param("id") id: number): Promise<number> {
