@@ -43,6 +43,8 @@ import {
   ApiParam,
   ApiQuery,
   ApiHeader,
+  ApiCreatedResponse,
+  ApiOkResponse,
 } from "@nestjs/swagger";
 
 @Controller("users")
@@ -60,6 +62,7 @@ export class UsersController {
     summary: "유저 회원가입",
     description: "유저 정보를 받아 회원가입 처리를 합니다.",
   })
+  @ApiCreatedResponse({ description: "회원가입을 정상적으로 처리" })
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     // this.printMyLog(dto);
@@ -73,6 +76,7 @@ export class UsersController {
     summary: "이메일 인증",
     description: "회원가입 중 유저의 이메일을 확인합니다.",
   })
+  @ApiOkResponse({ description: "이메일 인증을 정상적으로 처리" })
   @HttpCode(HttpStatus.ACCEPTED)
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
@@ -85,6 +89,7 @@ export class UsersController {
     summary: "유저 로그인",
     description: "유저 정보를 받아 로그인 합니다.",
   })
+  @ApiOkResponse({ description: "로그인을 정상적으로 처리" })
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
@@ -125,6 +130,7 @@ export class UsersController {
     type: UserInfoResponseDto,
     description: "유저 정보 조회 성공 시 반환되는 타입",
   })
+  @ApiOkResponse({ description: "유저 정보를 정상적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getUserInfo(@Headers() headers: any): Promise<UserInfoResponseDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
@@ -145,6 +151,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @ApiOkResponse({ description: "작성한 토론을 정상적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getDebatesByAuthor(
     @Param("id") userId: string,
@@ -163,6 +170,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @ApiOkResponse({ description: "참여한 토론을 정상적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getDebatesByParticipant(
     @Param("id") userId: string,
@@ -181,6 +189,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @ApiOkResponse({ description: "작성한 댓글을 정상적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getCommentsByUser(
     @Param("id") userId: string,
@@ -199,6 +208,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @ApiOkResponse({ description: "좋아요를 누른 토론을 정상적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getHeartsDebateByUser(@Param("id") userId: string, @Query() dto) {
     return this.usersService.getHeartsDebateByUser(userId, dto);
@@ -215,6 +225,7 @@ export class UsersController {
     required: true,
     description: "변경할 유저의 id",
   })
+  @ApiOkResponse({ description: "닉네임 변경을 정상적으로 처리" })
   @HttpCode(HttpStatus.OK)
   async updateNickName(
     @Param("id") userId: string,
@@ -226,13 +237,14 @@ export class UsersController {
   @Patch("/:id/password")
   @ApiOperation({
     summary: "유저 비밀번호 변경",
-    description: "유저의 닉네임을 변경합니다.",
+    description: "유저의 비밀번호를 변경합니다.",
   })
   @ApiParam({
     name: "id",
     required: true,
     description: "변경할 유저의 id",
   })
+  @ApiOkResponse({ description: "비밀번호 변경을 정상적으로 처리" })
   @HttpCode(HttpStatus.OK)
   async updatePassword(
     @Param("id") userId: string,
@@ -252,6 +264,7 @@ export class UsersController {
     required: true,
     description: "조회할 유저의 id",
   })
+  @ApiOkResponse({ description: "프로필 사진을 정상적으로 처리" })
   @HttpCode(HttpStatus.OK)
   async uploadFile(
     @Param("id") user_id: string,
