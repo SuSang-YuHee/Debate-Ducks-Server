@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -22,6 +24,7 @@ export class FactchecksController {
     summary: "팩트체크 생성",
     description: "정보를 받아 팩트체크를 생성합니다.",
   })
+  @HttpCode(HttpStatus.CREATED)
   async createFactcheck(@Body() dto: CreateFactcheckDto): Promise<number> {
     return await this.factchecksService.createFactcheck(dto);
   }
@@ -31,6 +34,7 @@ export class FactchecksController {
     summary: "팩트체크 업데이트",
     description: "정보를 받아 팩트체크를 수정합니다.",
   })
+  @HttpCode(HttpStatus.OK)
   async updateFactcheck(@Body() dto: UpdateFactcheckDto): Promise<number> {
     return await this.factchecksService.updateFactcheck(dto);
   }
@@ -45,6 +49,7 @@ export class FactchecksController {
     required: true,
     description: "삭제할 팩트체크의 id",
   })
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFactcheck(@Param("id") factcheckId: number): Promise<number> {
     return await this.factchecksService.deleteFactcheck(factcheckId);
   }
