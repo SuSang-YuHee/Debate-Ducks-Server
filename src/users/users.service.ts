@@ -34,11 +34,19 @@ export class UsersService {
   ) {}
 
   async createUser(name: string, email: string, password: string) {
-    const userExist = await this.checkUserExists(email);
+    const userEmailExist = await this.checkUserEmailExists(email);
+    const userNicknameExist = await this.checkUserNicknameExists(name);
     const profile_image = "temp default image";
-    if (userExist) {
+
+    if (userEmailExist) {
       throw new UnprocessableEntityException(
         "해당 이메일로는 가입할 수 없습니다.",
+      );
+    }
+
+    if (userNicknameExist) {
+      throw new UnprocessableEntityException(
+        "해당 이름은 이미 사용 중 입니다.",
       );
     }
 
@@ -82,57 +90,63 @@ export class UsersService {
     await this.usersRepository.save(user);
   }
 
-  private async saveUserUsingQueryRunner(
-    name: string,
-    email: string,
-    password: string,
-    signupVerifyToken: string,
-  ) {
-    const queryRunner = this.connection.createQueryRunner();
+  // private async saveUserUsingQueryRunner(
+  //   name: string,
+  //   email: string,
+  //   password: string,
+  //   signupVerifyToken: string,
+  // ) {
+  //   const queryRunner = this.connection.createQueryRunner();
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  //   await queryRunner.connect();
+  //   await queryRunner.startTransaction();
 
-    try {
-      const user = new UserEntity();
-      user.id = ulid();
-      user.nickname = name;
-      user.email = email;
-      user.password = password;
-      user.signupVerifyToken = signupVerifyToken;
+  //   try {
+  //     const user = new UserEntity();
+  //     user.id = ulid();
+  //     user.nickname = name;
+  //     user.email = email;
+  //     user.password = password;
+  //     user.signupVerifyToken = signupVerifyToken;
 
-      await queryRunner.manager.save(user);
+  //     await queryRunner.manager.save(user);
 
-      await queryRunner.commitTransaction();
-    } catch (e) {
-      await queryRunner.rollbackTransaction();
-    } finally {
-      await queryRunner.release();
-    }
-  }
+  //     await queryRunner.commitTransaction();
+  //   } catch (e) {
+  //     await queryRunner.rollbackTransaction();
+  //   } finally {
+  //     await queryRunner.release();
+  //   }
+  // }
 
-  private async saveUserUsingTransaction(
-    name: string,
-    email: string,
-    password: string,
-    signupVerifyToken: string,
-  ) {
-    await this.connection.transaction(async (manager) => {
-      const user = new UserEntity();
-      user.id = ulid();
-      user.nickname = name;
-      user.email = email;
-      user.password = password;
-      user.signupVerifyToken = signupVerifyToken;
+  // private async saveUserUsingTransaction(
+  //   name: string,
+  //   email: string,
+  //   password: string,
+  //   signupVerifyToken: string,
+  // ) {
+  //   await this.connection.transaction(async (manager) => {
+  //     const user = new UserEntity();
+  //     user.id = ulid();
+  //     user.nickname = name;
+  //     user.email = email;
+  //     user.password = password;
+  //     user.signupVerifyToken = signupVerifyToken;
 
-      await manager.save(user);
+  //     await manager.save(user);
 
-      // throw new InternalServerErrorException();
-    });
-  }
+  //     // throw new InternalServerErrorException();
+  //   });
+  // }
 
-  private async checkUserExists(emailAddress: string): Promise<boolean> {
+  private async checkUserEmailExists(emailAddress: string): Promise<boolean> {
     const user = await this.usersRepository.findOne({ email: emailAddress });
+
+    return user !== undefined;
+  }
+
+  private async checkUserNicknameExists(name: string): Promise<boolean> {
+    const user = await this.usersRepository.findOne({ nickname: name });
 
     return user !== undefined;
   }
@@ -192,6 +206,12 @@ export class UsersService {
   }
 
   async updateNickName(userId: string, body: UpdateUserNicknameDto) {
+    if (!userId) {
+      throw new BadRequestException(
+        "userId 값이 옳바르게 넘어오지 않았습니다.",
+      );
+    }
+
     const user: UserEntity = new UserEntity();
     user.id = userId;
     user.nickname = body.nickname;
@@ -203,6 +223,11 @@ export class UsersService {
       select: ["password"],
       where: { id: userId },
     });
+
+    if (!user) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     const isMatch = await bcrypt.compare(body.prevPassword, user.password);
 
     if (!isMatch) {
@@ -232,7 +257,17 @@ export class UsersService {
         id: userId,
       },
     });
+
+    if (!userEntity) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     const profileImage = userEntity.profile_image;
+
+    if (!profileImage) {
+      throw new NotFoundException("프로필 사진 정보를 찾을 수 없습니다.");
+    }
+
     return profileImage;
   }
 
@@ -241,6 +276,11 @@ export class UsersService {
       where: { id: userId },
       relations: ["debates"],
     });
+
+    if (!author) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     return author.debates;
   }
 
@@ -249,6 +289,11 @@ export class UsersService {
       where: { id: userId },
       relations: ["participant_debates"],
     });
+
+    if (!author) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     return author.participant_debates;
   }
 
@@ -257,6 +302,11 @@ export class UsersService {
       where: { id: userId },
       relations: ["comments"],
     });
+
+    if (!author) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     return author.comments;
   }
 

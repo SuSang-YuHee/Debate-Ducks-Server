@@ -15,8 +15,11 @@ interface IRoomInfo {
   };
 }
 
+//* key: 소캣 아이디, value: 룸 아이디
 export const roomId: IRoomId = {};
+//* key: 룸 아이디, value: 룸 정보
 export const roomInfo: IRoomInfo = {};
+//* 토론 진행 정보
 export const DEBATE: [string, number][] = [
   ["토론이 곧 시작됩니다.", 3],
   ["찬성 측 입론", 240],
@@ -28,6 +31,7 @@ export const DEBATE: [string, number][] = [
   ["토론이 종료되었습니다.", 0],
 ];
 
+//* 토론 진행
 export const debate = (
   socket: Socket,
   debateId: string,

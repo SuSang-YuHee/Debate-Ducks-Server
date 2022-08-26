@@ -3,12 +3,12 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { HeartEntity } from "src/hearts/entities/heart.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 import { VoteEntity } from "src/votes/entity/vote.entity";
-import { In, Like, Repository } from "typeorm";
+import { Like, Repository } from "typeorm";
 import { DebateInfoResponseDto } from "./dto/debate-info-response.dto";
 import { GetDebatesDto } from "./dto/get-debates-forum.dto";
 import { UpdateDebateDto } from "./dto/update-debate.dto";
@@ -22,9 +22,6 @@ export class DebatesService {
 
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-
-    @InjectRepository(HeartEntity)
-    private heartRepository: Repository<HeartEntity>,
 
     @InjectRepository(VoteEntity)
     private voteRepository: Repository<VoteEntity>,
@@ -62,11 +59,26 @@ export class DebatesService {
   }
 
   async updateDebate(dto: UpdateDebateDto) {
-    // TODO 업데이트 일시 분기
     const debate = await this.debateRepository.findOne({
       where: { id: dto.id },
       relations: ["author", "participant"],
     });
+
+    if (!debate) {
+      throw new NotFoundException("수정 할 토론을 찾지 못했습니다.");
+    }
+
+    if (!!dto.video_url) {
+      return await this.debateRepository.update(
+        {
+          id: dto.id,
+        },
+        {
+          video_url: dto.video_url,
+        },
+      );
+    }
+
     if (!!debate.author && !!debate.participant) {
       throw new BadRequestException(
         "참석자가 이미 참여한 토론은 수정할 수 없습니다.",
@@ -82,7 +94,6 @@ export class DebatesService {
           title: dto.title,
           contents: dto.contents,
           category: dto.category,
-          video_url: dto.video_url,
           author_pros: dto.author_pros,
           updated_date: new Date(),
         },
@@ -113,11 +124,16 @@ export class DebatesService {
             },
           );
         } else {
-          throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
+          throw new HttpException(
+            "토론 작성자는 참가자로 참가할 수 없습니다.",
+            HttpStatus.BAD_REQUEST,
+          );
         }
       } else {
-        // TODO 예외 메세징 처리
-        throw new HttpException("Bad Request", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "이미 참가자가 있기 때문에 참가할 수 없습니다.",
+          HttpStatus.BAD_REQUEST,
+        );
       }
     }
     return dto.id;
@@ -143,7 +159,10 @@ export class DebatesService {
       relations: ["author", "participant", "factchecks"],
     });
     if (!debate) {
-      throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        "해당 토론 정보를 찾지 못했습니다.",
+        HttpStatus.NOT_FOUND,
+      );
     } else {
       const result = {
         ...debate,
@@ -156,11 +175,18 @@ export class DebatesService {
   async getDebates(dto: GetDebatesDto) {
     const title = decodeURI(dto.title);
 
+    if (!title) {
+      throw new BadRequestException(
+        "검색할 title이 옳바르게 전달되지 못했습니다.",
+      );
+    }
+
     const totalCount = await this.debateRepository.count({
       where: {
         title: Like(`%${title}%`),
       },
     });
+
     const order_flag = dto.order || "DESC";
     const take_flag = dto.count || 12;
     const skip_flag = take_flag * dto.page;
@@ -189,6 +215,11 @@ export class DebatesService {
     contents: string,
   ) {
     const create_author = await this.userRepository.findOne({ id: author_id });
+
+    if (!create_author) {
+      throw new NotFoundException("해당 유저를 찾지 못했습니다.");
+    }
+
     const debate = new DebateEntity();
 
     debate.title = title;
