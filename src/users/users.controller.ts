@@ -65,7 +65,6 @@ export class UsersController {
   @ApiCreatedResponse({ description: "회원가입을 정상적으로 처리" })
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
-    // this.printMyLog(dto);
     this.printLoggerServiceLog(dto);
     const { name, email, password } = dto;
     await this.usersService.createUser(name, email, password);
@@ -126,11 +125,10 @@ export class UsersController {
     name: "Authorization",
     description: "bearer token",
   })
-  @ApiResponse({
+  @ApiOkResponse({
+    description: "유저 정보를 정상적으로 조회",
     type: UserInfoResponseDto,
-    description: "유저 정보 조회 성공 시 반환되는 타입",
   })
-  @ApiOkResponse({ description: "유저 정보를 정상적으로 조회" })
   @HttpCode(HttpStatus.OK)
   async getUserInfo(@Headers() headers: any): Promise<UserInfoResponseDto> {
     const jwtString = headers.authorization.split("Bearer ")[1];
@@ -294,27 +292,22 @@ export class UsersController {
     );
   }
 
-  // private printMyLog(dto) {
-  //   console.log(this.logger.name);
-
-  //   this.logger.error("error: ", dto);
-  //   this.logger.warn("warn: ", dto);
-  //   this.logger.info("info: ", dto);
-  //   this.logger.http("http: ", dto);
-  //   this.logger.verbose("verbose: ", dto);
-  //   this.logger.debug("debug: ", dto);
-  //   this.logger.silly("silly: ", dto);
+  // @Delete("/:id")
+  // @ApiOperation({
+  //   summary: "회원탈퇴",
+  //   description: "유저 정보를 받아 정보 삭제 처리를 합니다.",
+  // })
+  // @ApiCreatedResponse({ description: "회원탈퇴를 정상적으로 처리" })
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deleteUser(@Param("id") userId: string): Promise<void> {
+  //   await this.usersService.deleteUser(userId);
   // }
 
   private printLoggerServiceLog(dto) {
     try {
-      // throw new InternalServerErrorException("For test");
     } catch (e) {
       this.logger.error("error: " + JSON.stringify(dto), e.stack);
     }
-    this.logger.warn("warn: " + JSON.stringify(dto));
     this.logger.log("log: " + JSON.stringify(dto));
-    this.logger.verbose("verbose: " + JSON.stringify(dto));
-    this.logger.debug("debug: " + JSON.stringify(dto));
   }
 }
