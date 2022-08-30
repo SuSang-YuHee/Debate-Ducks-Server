@@ -37,7 +37,7 @@
   - Javascript, Typescript
   - NestJS 8.2.6
   - TypeORM
-  - WebRTC, Socket.io
+  - Socket.io
 - 데이터베이스 : MySQL
 - 형상관리 툴 : Github
 - 배포 환경 : AWS EC2, ELB, Route53, CloudFront, S3, RDS, Github Actions
@@ -114,4 +114,4 @@
 
 ## 정유찬
 
-- 채울 예정
+- 실시간 영상 토론 기능 구현
