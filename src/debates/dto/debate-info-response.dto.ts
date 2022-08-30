@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsString, MaxLength, MinLength } from "class-validator";
+import { IsBoolean } from "class-validator";
 import { FactcheckEntity } from "src/factchecks/entity/factcheck.entity";
 import { UserEntity } from "src/users/entity/user.entity";
 

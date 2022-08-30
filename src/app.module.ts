@@ -9,11 +9,6 @@ import emailConfig from "./config/emailConfig";
 import { validationSchema } from "./config/validationSchema";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import authConfig from "./config/authConfig";
-import * as winston from "winston";
-import {
-  utilities as nestWinstonModuleUtilities,
-  WinstonModule,
-} from "nest-winston";
 import { ExceptionModule } from "./exception/exception.module";
 import { LoggingModule } from "./logging/logging.module";
 import { HealthCheckController } from "./health-check/health-check.controller";
@@ -24,7 +19,7 @@ import { FactchecksModule } from "./factchecks/factchecks.module";
 import { VotesModule } from "./votes/votes.module";
 import { HeartsModule } from "./hearts/hearts.module";
 import { CommentsModule } from "./comments/comments.module";
-import { AlarmsModule } from './alarms/alarms.module';
+import { AlarmsModule } from "./alarms/alarms.module";
 
 @Module({
   imports: [
@@ -33,19 +28,6 @@ import { AlarmsModule } from './alarms/alarms.module';
       load: [emailConfig, authConfig],
       isGlobal: true,
       validationSchema,
-    }),
-    WinstonModule.forRoot({
-      transports: [
-        new winston.transports.Console({
-          level: process.env.NODE_ENV === "production" ? "info" : "silly",
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            nestWinstonModuleUtilities.format.nestLike("MyApp", {
-              prettyPrint: true,
-            }),
-          ),
-        }),
-      ],
     }),
     TypeOrmModule.forRoot(),
     ExceptionModule,
