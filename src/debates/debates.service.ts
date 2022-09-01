@@ -175,12 +175,6 @@ export class DebatesService {
   async getDebates(dto: GetDebatesDto) {
     const title = decodeURI(dto.title);
 
-    if (!title) {
-      throw new BadRequestException(
-        "검색할 title이 옳바르게 전달되지 못했습니다.",
-      );
-    }
-
     const totalCount = await this.debateRepository.count({
       where: {
         title: Like(`%${title}%`),
