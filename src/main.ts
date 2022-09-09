@@ -37,7 +37,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle("Debate Ducks")
     .setDescription("Debate-Ducks-Server-Api")
-    .setVersion("1.0")
+    .setVersion("2.0.0")
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
